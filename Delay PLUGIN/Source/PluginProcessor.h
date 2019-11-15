@@ -67,9 +67,12 @@ private:
 	void readFromDelayBuffer(AudioBuffer<float> &buffer, int channel);
 	AudioProcessorValueTreeState::ParameterLayout createLayout();
 
+
 	double lastSampleRate;
+	float lastDelayTime; //need this for smoothing the delay time
 	int writePosition = 0;
 	AudioBuffer<float> delayBuffer;
+	SmoothedValue<float, ValueSmoothingTypes::Linear> smoothedValue;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DelayPluginAudioProcessor)
 };

@@ -33,7 +33,8 @@ private:
     DelayPluginAudioProcessor& processor;
 
 	std::unique_ptr<Slider> delayTimeSlider;
-	std::unique_ptr<SliderAttachment> delayTimeAttachment;
+	std::unique_ptr<SliderAttachment> delayTimeAttachment; //how you link the gui elements to the actual delay variables
+	std::unique_ptr<Slider> feedbackSlider;
     
     TextButton button;
 

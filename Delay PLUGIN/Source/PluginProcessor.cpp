@@ -172,7 +172,12 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 
 	for (int i = 0; i < buffer.getNumChannels(); i++) {
 		fillDelayBuffer(buffer, i);
-		readFromDelayBuffer(buffer, i);
+
+
+
+
+
+		readFromDelayBuffer(buffer, i); //switch the order of fill and read if you do not need feedback to be a feature
 	}
 
 	writePosition += numSamples;
@@ -238,7 +243,7 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 	int delaySamples = delayBuffer.getNumSamples();
 
 	float delayTime = *parameters.getRawParameterValue("delayTime");
-	DBG(delayTime);
+	//DBG(delayTime);
 
 	
 	//wrap around from end of last buffer to start of next one
@@ -271,6 +276,8 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createLayout() {
 	AudioProcessorValueTreeState::ParameterLayout layout;
 	layout.add( std::make_unique<AudioParameterFloat>( "delayTime", "Delay Time (ms)", NormalisableRange<float>(0.0, 2000.0), 500.0 ) );
+	layout.add(std::make_unique<AudioParameterFloat>( "feedback", "Feedback", NormalisableRange<float>(0.0, 1.0), 0.0) );
+	
 	return layout;
 }
 

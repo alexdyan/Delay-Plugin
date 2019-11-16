@@ -11,6 +11,8 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "LookAndFeelHolder.h"
+#include "DelayPluginLookAndFeel.h"
 
 /**
 */
@@ -73,6 +75,7 @@ private:
 	int writePosition = 0;
 	AudioBuffer<float> delayBuffer;
 	SmoothedValue<float, ValueSmoothingTypes::Linear> smoothedValue;
+	LookAndFeelHolder<DelayPluginLookAndFeel> lookAndFeel;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DelayPluginAudioProcessor)
 };

@@ -12,11 +12,12 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
+#include "DelayDisplay.h"
 typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment; //the thing for attaching the slider info to the layout
 
 /**
 */
-class DelayPluginAudioProcessorEditor  : public AudioProcessorEditor
+class DelayPluginAudioProcessorEditor  : public AudioProcessorEditor, AudioProcessorValueTreeState::Listener //inherit from the audio tree listener (to access the delay time in the gui)
 {
 public:
     DelayPluginAudioProcessorEditor (DelayPluginAudioProcessor&);
@@ -26,6 +27,7 @@ public:
 
     void paint (Graphics&) override;
     void resized() override;
+	virtual void parameterChanged(const String &parameterId, float newParameterValue) override;
 
 private:
     // This reference is provided as a quick way for your editor to
@@ -36,6 +38,8 @@ private:
 	std::unique_ptr<SliderAttachment> delayTimeAttachment; //how you link the gui elements to the actual delay variables
 	std::unique_ptr<Slider> feedbackSlider;
 	std::unique_ptr<SliderAttachment> feedbackAttachment;
+
+	std::unique_ptr<DelayDisplay> display;
     
     TextButton button;
 

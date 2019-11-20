@@ -249,7 +249,7 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 	int delaySamples = delayBuffer.getNumSamples();
 
 	float delayTime = *parameters.getRawParameterValue("delayTime");
-	DBG(delayTime);
+	//DBG(delayTime);
 
 	
 	//wrap around from end of last buffer to start of next one
@@ -282,7 +282,7 @@ void DelayPluginAudioProcessor::feedback(AudioBuffer<float>& buffer, int channel
 	int delaySamples = delayBuffer.getNumSamples();
 	float gain = 0.7;
 	gain = *parameters.getRawParameterValue("feedback");
-	DBG(gain);
+	//DBG(gain);
 
 	if (numSamples + writePosition >= delaySamples) {
 		int difference = delaySamples - writePosition;

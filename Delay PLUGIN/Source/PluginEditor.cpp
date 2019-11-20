@@ -17,6 +17,8 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
 
+	processor.parameters.addParameterListener("delayTime", this); //this is the listener
+
 	//delay time slider
 	delayTimeSlider.reset(new Slider()); //initialize the slider
 	delayTimeSlider->setSliderStyle( Slider::SliderStyle::Rotary ); //make a circular slider (not a line)
@@ -30,6 +32,11 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
 	feedbackSlider->setRange(0.0, 1.0);
 	addAndMakeVisible(feedbackSlider.get());
 
+	//delay display
+	display.reset(new DelayDisplay(p)); //give the constructor the processor reference (p)
+	addAndMakeVisible(display.get());
+
+	//attachments
 	delayTimeAttachment.reset( new SliderAttachment( processor.parameters, "delayTime", *delayTimeSlider.get() ) );
 	feedbackAttachment.reset(new SliderAttachment( processor.parameters, "feedback", *feedbackSlider.get() ) );
 
@@ -49,7 +56,6 @@ void DelayPluginAudioProcessorEditor::paint (Graphics& g)
 
     g.setColour (Colours::white);
     g.setFont (15.0f);
-    g.drawFittedText ("HIYEE HIYEE HIYEE!", getLocalBounds(), Justification::centred, 1);
 }
 
 void DelayPluginAudioProcessorEditor::resized()
@@ -58,10 +64,24 @@ void DelayPluginAudioProcessorEditor::resized()
     // subcomponents in your editor..
 
 	Rectangle<int> area = getLocalBounds();
-	area.removeFromRight(getWidth()/2);
+	area.removeFromBottom(getHeight()/2);
+	display->setBounds(area); //top half of window
 
+	area.translate(0, getHeight()/2);
+	area.removeFromRight(getWidth()/2); //bottom left of window
 	delayTimeSlider->setBounds(area); // . accessing the unique pointer, -> accessing the thing it points to
 	
 	area.translate(getWidth()/2, 0);
-	feedbackSlider->setBounds(area);
+	feedbackSlider->setBounds(area); //bottom right of window
+}
+
+//this part is so we can access delayTime from the gui world, but don't know how/why it works
+//see updateDelayTime in DelayDisplay.cpp
+void DelayPluginAudioProcessorEditor::parameterChanged(const String &parameterId, float newParameterValue) {
+	if (parameterId.equalsIgnoreCase("delayTime")) {
+		auto updateDisplay = [&] { //lambda -> function that's also a variable or something
+			display->updateDelayTime(); //set the gui delayTime to the actual slider delayTime value
+		};
+		MessageManager::callAsync(updateDisplay); //don't know
+	}
 }

@@ -96,6 +96,7 @@ void DelayPluginAudioProcessor::changeProgramName (int index, const String& newN
 
 
 ///////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
 
 
 void DelayPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
@@ -109,7 +110,6 @@ void DelayPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
 	lastDelayTime = *parameters.getRawParameterValue("delayTime");
 	smoothedValue = SmoothedValue<float, ValueSmoothingTypes::Linear>(lastDelayTime); //initial value of current delayTime
-
 }
 
 void DelayPluginAudioProcessor::releaseResources()
@@ -142,6 +142,9 @@ bool DelayPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 }
 #endif
 
+///////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+
 void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
     ScopedNoDenormals noDenormals;
@@ -151,9 +154,6 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
     // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
@@ -171,13 +171,18 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 	int delaySamples = delayBuffer.getNumSamples();
 
 	for (int i = 0; i < buffer.getNumChannels(); i++) {
+		float* drySignalBuffer = buffer.getWritePointer(i); //buffer to add the main signal to for feedback
+
 		fillDelayBuffer(buffer, i);
 
+/*		AudioBuffer<float> delayCopy(buffer.getNumChannels(), buffer.getNumSamples());	//make a new copy of the filled delay buffer
+		readFromDelayBuffer(delayCopy, i);												//read from filled delay buffer and write to delayCopy
+		delayCopy.applyGain(*parameters.getRawParameterValue("feedback"));				//multiple by the current feedback amount
+		fillDelayBuffer(delayCopy, i);													//fill again on top of og stuff with the delayed (feedback) signal
+*/
 
-
-
-
-		readFromDelayBuffer(buffer, i); //switch the order of fill and read if you do not need feedback to be a feature
+		readFromDelayBuffer(buffer, i);
+		feedback(buffer, i, drySignalBuffer);
 	}
 
 	writePosition += numSamples;
@@ -216,6 +221,7 @@ void DelayPluginAudioProcessor::setStateInformation (const void* data, int sizeI
 
 
 ///////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
 
 
 void DelayPluginAudioProcessor::fillDelayBuffer(AudioBuffer<float> &buffer, int channel)
@@ -243,7 +249,7 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 	int delaySamples = delayBuffer.getNumSamples();
 
 	float delayTime = *parameters.getRawParameterValue("delayTime");
-	//DBG(delayTime);
+	DBG(delayTime);
 
 	
 	//wrap around from end of last buffer to start of next one
@@ -262,13 +268,32 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 		int difference = delaySamples - readPosition;	//number of samples left until the end of delaybuffer
 		int leftOverSamples = numSamples - difference;	//number of samples that get cut off and have to be put at the beginning
 
-		buffer.addFrom(channel, 0, delayBuffer, channel, readPosition, difference); //from readPosition to end of buffer
-		buffer.addFrom(channel, difference, delayBuffer, channel, 0, leftOverSamples); //from 0 to left over amount
+		buffer.copyFrom(channel, 0, delayBuffer, channel, readPosition, difference); //from readPosition to end of buffer
+		buffer.copyFrom(channel, difference, delayBuffer, channel, 0, leftOverSamples); //from 0 to left over amount
 	}
 	else { //if you do NOT have to wrap around to the beginning, read from delay buffer normally
-		buffer.addFrom(channel, 0, delayBuffer, channel, readPosition, numSamples);
+		buffer.copyFrom(channel, 0, delayBuffer, channel, readPosition, numSamples);
 	}
 
+}
+
+void DelayPluginAudioProcessor::feedback(AudioBuffer<float>& buffer, int channel, float* drySignalBuffer) {
+	int numSamples = buffer.getNumSamples();
+	int delaySamples = delayBuffer.getNumSamples();
+	float gain = 0.7;
+	gain = *parameters.getRawParameterValue("feedback");
+	DBG(gain);
+
+	if (numSamples + writePosition >= delaySamples) {
+		int difference = delaySamples - writePosition;
+		int leftOverSamples = numSamples - difference;
+
+		delayBuffer.addFromWithRamp(channel, difference, drySignalBuffer, difference, gain, gain);
+		delayBuffer.addFromWithRamp(channel, 0, drySignalBuffer, leftOverSamples, gain, gain);
+	}
+	else {
+		delayBuffer.addFromWithRamp(channel, writePosition, drySignalBuffer, numSamples, gain, gain);
+	}
 }
 
 

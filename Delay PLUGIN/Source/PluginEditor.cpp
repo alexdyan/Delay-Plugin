@@ -31,6 +31,7 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
 	addAndMakeVisible(feedbackSlider.get());
 
 	delayTimeAttachment.reset( new SliderAttachment( processor.parameters, "delayTime", *delayTimeSlider.get() ) );
+	feedbackAttachment.reset(new SliderAttachment( processor.parameters, "feedback", *feedbackSlider.get() ) );
 
     setSize (400, 400);
 }

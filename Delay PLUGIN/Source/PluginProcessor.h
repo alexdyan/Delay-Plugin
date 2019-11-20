@@ -67,6 +67,7 @@ public:
 private:
     void fillDelayBuffer(AudioBuffer<float> &buffer, int channel);
 	void readFromDelayBuffer(AudioBuffer<float> &buffer, int channel);
+	void feedback(AudioBuffer<float>& buffer, int channel, float* drySignalBuffer);
 	AudioProcessorValueTreeState::ParameterLayout createLayout();
 
 

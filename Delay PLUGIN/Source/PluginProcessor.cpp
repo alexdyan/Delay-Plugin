@@ -8,6 +8,17 @@
   ==============================================================================
 */
 
+
+/*
+- future possible additions: hover over some point in the signal and give user more info (such as amplitude in the osc at a point or effect info)
+- future possible: zoom into see more accurate delay time
+feedback: use bar graphs to represent gain of delayed signal OR hover text for each knob (not obligated to read)
+
+- references: isotope! ableton too much visual stimulation...? 
+- kind of foundational paper in interface design -> Interactive User Interface Design by IEEE to site!
+- Edward Tufte da
+*/
+
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -20,7 +31,7 @@ DelayPluginAudioProcessor::DelayPluginAudioProcessor() : parameters(*this, nullp
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ), lfo(*this) // "this" is the reference to the processor bc WE ARE IN the processor rn
 #endif
 {
     
@@ -94,10 +105,7 @@ void DelayPluginAudioProcessor::changeProgramName (int index, const String& newN
 {
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-
 
 void DelayPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
@@ -110,7 +118,12 @@ void DelayPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
 	lastDelayTime = *parameters.getRawParameterValue("delayTime");
 	smoothedValue = SmoothedValue<float, ValueSmoothingTypes::Linear>(lastDelayTime); //initial value of current delayTime
+
+	lfo.prepareToPlay(sampleRate);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//////////////////// NO NEED TO TOUCH ANYTHING IN HERE /////////////////////////
 
 void DelayPluginAudioProcessor::releaseResources()
 {
@@ -143,7 +156,6 @@ bool DelayPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
 
 void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
@@ -164,11 +176,12 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
     
-    
     //clearActiveBufferRegion(); //erases all input as it comes in DONT WANT!
 
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
+
+	lfo.processBlock(buffer);
 
 	for (int i = 0; i < buffer.getNumChannels(); i++) {
 		float* drySignalBuffer = buffer.getWritePointer(i); //buffer to add the main signal to for feedback
@@ -196,6 +209,11 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+//////////////////// NO NEED TO TOUCH ANYTHING IN HERE /////////////////////////
+
+
 bool DelayPluginAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
@@ -220,7 +238,6 @@ void DelayPluginAudioProcessor::setStateInformation (const void* data, int sizeI
 }
 
 
-///////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////
 
 
@@ -298,11 +315,16 @@ void DelayPluginAudioProcessor::feedback(AudioBuffer<float>& buffer, int channel
 
 
 //look up the tutorial for Audio Tree State
+//these are the 
 AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createLayout() {
 	AudioProcessorValueTreeState::ParameterLayout layout;
 	layout.add( std::make_unique<AudioParameterFloat>( "delayTime", "Delay Time (ms)", NormalisableRange<float>(0.0, 2000.0), 500.0 ) );
-	layout.add(std::make_unique<AudioParameterFloat>( "feedback", "Feedback", NormalisableRange<float>(0.0, 1.0), 0.0) );
-	
+	layout.add( std::make_unique<AudioParameterFloat>( "feedback", "Feedback", NormalisableRange<float>(0.0, 1.0), 0.0) );
+	layout.add( std::make_unique<AudioParameterFloat>( "lfoFrequency", "LFO Frequency", NormalisableRange<float>(1.0, 1000.0), 1.0) );
+
+	//this parameter is for a 3-way toggle switch that allows the user to choose from manual delay time (the knob), lfo modulated delay time, or input signal amplitude modulated delay time
+	layout.add(std::make_unique<AudioParameterInt>("delayMode", "Delay Mode", 0, 2, 0));
+
 	return layout;
 }
 

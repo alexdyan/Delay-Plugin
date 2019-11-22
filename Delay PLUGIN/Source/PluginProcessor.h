@@ -13,6 +13,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "LookAndFeelHolder.h"
 #include "DelayPluginLookAndFeel.h"
+#include "LFO.h"
 
 /**
 */
@@ -77,6 +78,7 @@ private:
 	AudioBuffer<float> delayBuffer;
 	SmoothedValue<float, ValueSmoothingTypes::Linear> smoothedValue;
 	LookAndFeelHolder<DelayPluginLookAndFeel> lookAndFeel;
+	LFO lfo;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DelayPluginAudioProcessor)
 };

@@ -19,6 +19,8 @@
             file="Source/DelayPluginLookAndFeel.h"/>
       <FILE id="D6H2J4" name="LookAndFeelHolder.h" compile="0" resource="0"
             file="Source/LookAndFeelHolder.h"/>
+      <FILE id="wLqsuc" name="LFO.cpp" compile="1" resource="0" file="Source/LFO.cpp"/>
+      <FILE id="NSTWyG" name="LFO.h" compile="0" resource="0" file="Source/LFO.h"/>
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>

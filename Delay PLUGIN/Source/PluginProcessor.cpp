@@ -315,7 +315,7 @@ void DelayPluginAudioProcessor::feedback(AudioBuffer<float>& buffer, int channel
 
 
 //look up the tutorial for Audio Tree State
-//these are the 
+//these are the parameters that the user can control in the interface
 AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createLayout() {
 	AudioProcessorValueTreeState::ParameterLayout layout;
 	layout.add( std::make_unique<AudioParameterFloat>( "delayTime", "Delay Time (ms)", NormalisableRange<float>(0.0, 2000.0), 500.0 ) );

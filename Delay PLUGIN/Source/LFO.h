@@ -22,7 +22,7 @@ class LFO {
 
 	private:
 		DelayPluginAudioProcessor &processor;
-		float lfoFrequency = 1.0;
+		float lastFrequency = 1.0;
 		double currentSampleRate = 0.0; //using double for accuracy
 		double angleDelta = 0.0;
 		double currentAngle = 0.0;

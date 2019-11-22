@@ -176,24 +176,21 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
     
-    //clearActiveBufferRegion(); //erases all input as it comes in DONT WANT!
+
+	AudioBuffer<float> lfoBuffer; //make a buffer to store your lfo signal values
+	lfoBuffer.setSize(1, buffer.getNumSamples()); //make the size that of the output buffer
+	lfo.processBlock(lfoBuffer); //write to the lfo buffer (NOT the output buffer)
+	currentLFOAmplitude = 0;
+	currentLFOAmplitude = lfoBuffer.getRMSLevel(0, 0, buffer.getNumSamples()); //get the rms (amplitude) of the lfo signal
+	DBG(currentLFOAmplitude);
 
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
-
-	lfo.processBlock(buffer);
 
 	for (int i = 0; i < buffer.getNumChannels(); i++) {
 		float* drySignalBuffer = buffer.getWritePointer(i); //buffer to add the main signal to for feedback
 
 		fillDelayBuffer(buffer, i);
-
-/*		AudioBuffer<float> delayCopy(buffer.getNumChannels(), buffer.getNumSamples());	//make a new copy of the filled delay buffer
-		readFromDelayBuffer(delayCopy, i);												//read from filled delay buffer and write to delayCopy
-		delayCopy.applyGain(*parameters.getRawParameterValue("feedback"));				//multiple by the current feedback amount
-		fillDelayBuffer(delayCopy, i);													//fill again on top of og stuff with the delayed (feedback) signal
-*/
-
 		readFromDelayBuffer(buffer, i);
 		feedback(buffer, i, drySignalBuffer);
 	}
@@ -201,7 +198,7 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 	writePosition += numSamples;
 	writePosition %= delaySamples;
 
-//		combine noise with the signal
+//		how to combine noise with the signal
 //		for (int i = 0; i < buffer.getNumSamples(); i++)
 //		{
 //			buffer[i] *= Random().nextFloat();
@@ -264,9 +261,15 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 {
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
+	float delayTime;
 
-	float delayTime = *parameters.getRawParameterValue("delayTime");
-	//DBG(delayTime);
+	if (true) {
+		delayTime = ceil(currentLFOAmplitude * 1000);
+	}
+	else {
+		delayTime = *parameters.getRawParameterValue("delayTime");
+		//DBG(delayTime);
+	}
 
 	
 	//wrap around from end of last buffer to start of next one

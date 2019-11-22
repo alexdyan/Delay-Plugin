@@ -75,6 +75,8 @@ private:
 	double lastSampleRate;
 	float lastDelayTime; //need this for smoothing the delay time
 	int writePosition = 0;
+	float currentLFOAmplitude;
+
 	AudioBuffer<float> delayBuffer;
 	SmoothedValue<float, ValueSmoothingTypes::Linear> smoothedValue;
 	LookAndFeelHolder<DelayPluginLookAndFeel> lookAndFeel;

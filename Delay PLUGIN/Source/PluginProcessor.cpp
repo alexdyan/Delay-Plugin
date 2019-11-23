@@ -208,13 +208,21 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 	else {}
 
 	for (int i = 0; i < buffer.getNumChannels(); i++) {
+		//do the feedback
 		float* drySignalBuffer = buffer.getWritePointer(i); //buffer to add the main signal to for feedback
-
 		fillDelayBuffer(buffer, i);
 		readFromDelayBuffer(buffer, i);
 		feedback(buffer, i, drySignalBuffer);
+
+		float magnitude = buffer.getMagnitude(i, 0, buffer.getNumSamples()); //returns value of loudest sample
+		float* bufferData = buffer.getWritePointer(i);
+
+		for (int j = 0; j < buffer.getNumSamples(); j++) {
+			bufferData[j] /= magnitude;
+		}
 	}
 
+	//update the writePosition
 	writePosition += numSamples;
 	writePosition %= delaySamples;
 

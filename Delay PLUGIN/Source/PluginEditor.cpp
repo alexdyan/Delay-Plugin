@@ -14,22 +14,18 @@
 DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
-
 	processor.parameters.addParameterListener("delayTime", this); //this is the listener
 
 	//delay time slider
 	delayTimeSlider.reset(new Slider()); //initialize the slider
 	delayTimeSlider->setSliderStyle( Slider::SliderStyle::Rotary ); //make a circular slider (not a line)
-	//delayTimeSlider->setRange(0.0, 2000.0); //set the min and max values
+	//delayTimeSlider->setRange(0.0, 2000.0); //set the min and max values (don't have to use this bc when you use the attachment, the parameter variable sets the range)
 	delayTimeSlider->setLookAndFeel( &LookAndFeel::getDefaultLookAndFeel() );
 	addAndMakeVisible(delayTimeSlider.get()); //you need .get() because it's a unique pointer
 
 	//feedback slider
 	feedbackSlider.reset(new Slider());
 	feedbackSlider->setSliderStyle( Slider::SliderStyle::Rotary );
-	//feedbackSlider->setRange(0.0, 1.0);
 	addAndMakeVisible(feedbackSlider.get());
 
 	//lfo frequency slider
@@ -37,6 +33,9 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
 	lfoFreqSlider->setSliderStyle(Slider::SliderStyle::Rotary);
 	addAndMakeVisible(lfoFreqSlider.get());
 
+	//delayMode slider (toggle)
+	delayModeSlider.reset(new Slider());
+	addAndMakeVisible(delayModeSlider.get());
 
 	//delay display
 	display.reset(new DelayDisplay(p)); //give the constructor the processor reference (p)
@@ -46,7 +45,9 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
 	delayTimeAttachment.reset( new SliderAttachment( processor.parameters, "delayTime", *delayTimeSlider.get() ) );
 	feedbackAttachment.reset( new SliderAttachment( processor.parameters, "feedback", *feedbackSlider.get() ) );
 	lfoFreqAttachment.reset( new SliderAttachment( processor.parameters, "lfoFrequency", *lfoFreqSlider.get() ) );
+	delayModeAttachment.reset( new SliderAttachment( processor.parameters, "delayMode", *delayModeSlider.get() ) );
 
+	//always set the size at the end of the constructor
     setSize (600, 600);
 }
 
@@ -80,8 +81,15 @@ void DelayPluginAudioProcessorEditor::resized()
 	feedbackArea = feedbackArea.removeFromRight(getWidth() / 4);
 	feedbackSlider->setBounds(feedbackArea); //feedback slider on the right 1/4 of window
 
+	Rectangle<int> delayModeArea = getLocalBounds();
+	delayModeArea.removeFromTop(getHeight() / 2);
+	delayModeArea.removeFromRight(getWidth() / 4);
+	delayModeArea = delayModeArea.removeFromTop( (getHeight()/2) / 3 );
+	delayModeArea = delayModeArea.withSizeKeepingCentre(delayModeArea.getWidth() * 0.8, delayModeArea.getHeight());
+	delayModeSlider->setBounds(delayModeArea);
+
 	Rectangle<int> delayArea1 = getLocalBounds();
-	delayArea1.removeFromTop(getHeight()/2);
+	delayArea1 = delayArea1.removeFromBottom(getHeight()/3);
 	delayArea1 = delayArea1.removeFromLeft(getWidth() / 4);
 	delayTimeSlider->setBounds(delayArea1); //manual delay slider on the left 1/4 of window
 

@@ -177,15 +177,35 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
     // interleaved by keeping the same state.
     
 
-	AudioBuffer<float> lfoBuffer; //make a buffer to store your lfo signal values
-	lfoBuffer.setSize(1, buffer.getNumSamples()); //make the size that of the output buffer
-	lfo.processBlock(lfoBuffer); //write to the lfo buffer (NOT the output buffer)
-	currentLFOAmplitude = 0;
-	currentLFOAmplitude = lfoBuffer.getRMSLevel(0, 0, buffer.getNumSamples()); //get the rms (amplitude) of the lfo signal
-	DBG(currentLFOAmplitude);
-
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
+	int currentDelayMode = int(*parameters.getRawParameterValue("delayMode"));
+
+	//see which delay mode we're in and set currentDelayTime accordingly
+	//manual = get slider value from delayTime parameter
+	if (currentDelayMode == DelayMode::manualMode) {
+		currentDelayTime = *parameters.getRawParameterValue("delayTime");
+	}
+
+	//lfo modulated = create and write to LFO buffer, get RMS level (current amplitude), and scale that and set it as currentDelayTime
+	else if (currentDelayMode == DelayMode::lfoMode) {
+		AudioBuffer<float> lfoBuffer; //make a buffer to store your lfo signal values
+		lfoBuffer.setSize(1, buffer.getNumSamples()); //make the size that of the output buffer
+		lfo.processBlock(lfoBuffer); //write to the lfo buffer (NOT the output buffer)
+		float currentLFOAmplitude = 0;
+		currentLFOAmplitude = lfoBuffer.getRMSLevel(0, 0, buffer.getNumSamples()); //get the rms (amplitude) of the lfo signal
+
+		currentDelayTime = ceil(currentLFOAmplitude * 1000);
+	}
+
+	//amplitude modulates = get RMS level (amplitude) of the input signal (the buffer), scale it and set it as currentDelayTime
+	else if (currentDelayMode == DelayMode::amplitudeMode) {
+		float currentInputAmplitude = 0;
+		currentInputAmplitude = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+		currentDelayTime = ceil(currentInputAmplitude * 1000);
+	}
+
+	else {}
 
 	for (int i = 0; i < buffer.getNumChannels(); i++) {
 		float* drySignalBuffer = buffer.getWritePointer(i); //buffer to add the main signal to for feedback
@@ -261,25 +281,15 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 {
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
-	float delayTime;
-
-	if (true) {
-		delayTime = ceil(currentLFOAmplitude * 1000);
-	}
-	else {
-		delayTime = *parameters.getRawParameterValue("delayTime");
-		//DBG(delayTime);
-	}
-
 	
 	//wrap around from end of last buffer to start of next one
 	//delayTime is ms and fs is in seconds -> math to compensate
 	//mod by delaybuffer length to wrap around when near the end of buffer
-	int readPosition = static_cast<int>(delaySamples + writePosition - (lastSampleRate * delayTime/1000) ) % delaySamples;
+	int readPosition = static_cast<int>(delaySamples + writePosition - (lastSampleRate * currentDelayTime/1000) ) % delaySamples;
 	
-	if (lastDelayTime != delayTime) { //if you turn the knob
-		if (smoothedValue.getTargetValue() != delayTime) { //if you keep turning the knob
-			smoothedValue.setTargetValue(delayTime); //update the target value
+	if (lastDelayTime != currentDelayTime) { //if you turn the knob
+		if (smoothedValue.getTargetValue() != currentDelayTime) { //if you keep turning the knob
+			smoothedValue.setTargetValue(currentDelayTime); //update the target value
 			lastDelayTime = smoothedValue.getNextValue(); //do the smoothing
 		}
 	}
@@ -323,10 +333,10 @@ AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createL
 	AudioProcessorValueTreeState::ParameterLayout layout;
 	layout.add( std::make_unique<AudioParameterFloat>( "delayTime", "Delay Time (ms)", NormalisableRange<float>(0.0, 2000.0), 500.0 ) );
 	layout.add( std::make_unique<AudioParameterFloat>( "feedback", "Feedback", NormalisableRange<float>(0.0, 1.0), 0.0) );
-	layout.add( std::make_unique<AudioParameterFloat>( "lfoFrequency", "LFO Frequency", NormalisableRange<float>(0.1, 5.0), 1.0) );
+	layout.add( std::make_unique<AudioParameterFloat>( "lfoFrequency", "LFO Frequency", NormalisableRange<float>(0.1, 4.0), 1.0) );
 
 	//this parameter is for a 3-way toggle switch that allows the user to choose from manual delay time (the knob), lfo modulated delay time, or input signal amplitude modulated delay time
-	layout.add(std::make_unique<AudioParameterInt>("delayMode", "Delay Mode", 0, 2, 0));
+	layout.add(std::make_unique<AudioParameterInt>("delayMode", "Delay Mode", 1, 3, 0));
 
 	return layout;
 }

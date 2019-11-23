@@ -20,6 +20,12 @@
 class DelayPluginAudioProcessor  : public AudioProcessor
 {
 public:
+	enum DelayMode:int {
+		manualMode = 1,
+		lfoMode,
+		amplitudeMode
+	};
+
     DelayPluginAudioProcessor();
     ~DelayPluginAudioProcessor();
 
@@ -73,9 +79,9 @@ private:
 
 
 	double lastSampleRate;
+	float currentDelayTime = 0;
 	float lastDelayTime; //need this for smoothing the delay time
 	int writePosition = 0;
-	float currentLFOAmplitude;
 
 	AudioBuffer<float> delayBuffer;
 	SmoothedValue<float, ValueSmoothingTypes::Linear> smoothedValue;

@@ -17,20 +17,27 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
 	processor.parameters.addParameterListener("delayTime", this); //this is the listener
 
 	//delay time slider
-	delayTimeSlider.reset(new Slider()); //initialize the slider
-	delayTimeSlider->setSliderStyle( Slider::SliderStyle::Rotary ); //make a circular slider (not a line)
-	//delayTimeSlider->setRange(0.0, 2000.0); //set the min and max values (don't have to use this bc when you use the attachment, the parameter variable sets the range)
-	delayTimeSlider->setLookAndFeel( &LookAndFeel::getDefaultLookAndFeel() );
-	addAndMakeVisible(delayTimeSlider.get()); //you need .get() because it's a unique pointer
+	delayTimeSlider.reset(new Slider());							//initialize the slider
+	delayTimeSlider->setSliderStyle( Slider::SliderStyle::Rotary );	//make a circular slider (not a line)
+	//colors
+	delayTimeSlider->setColour(Slider::ColourIds::backgroundColourId, Colour::Colour(225, 0, 0));
+	delayTimeSlider->setColour(Slider::ColourIds::rotarySliderOutlineColourId, Colour::Colour(225, 0, 0));
+	addAndMakeVisible(delayTimeSlider.get());						//you need .get() because it's a unique pointer
 
 	//feedback slider
 	feedbackSlider.reset(new Slider());
 	feedbackSlider->setSliderStyle( Slider::SliderStyle::Rotary );
+	//colors
+	feedbackSlider->setColour(Slider::ColourIds::backgroundColourId, Colour::Colour(255, 0, 100));
+	feedbackSlider->setColour(Slider::ColourIds::rotarySliderOutlineColourId, Colour::Colour(255, 0, 100));
 	addAndMakeVisible(feedbackSlider.get());
 
 	//lfo frequency slider
 	lfoFreqSlider.reset(new Slider());
 	lfoFreqSlider->setSliderStyle(Slider::SliderStyle::Rotary);
+	//colors
+	lfoFreqSlider->setColour(Slider::ColourIds::backgroundColourId, Colour::Colour(255, 0, 35));
+	lfoFreqSlider->setColour(Slider::ColourIds::rotarySliderOutlineColourId, Colour::Colour(255, 0, 35));
 	addAndMakeVisible(lfoFreqSlider.get());
 
 	//delayMode slider (toggle)
@@ -70,7 +77,7 @@ void DelayPluginAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
-	// NOTE . accessing the unique pointer, -> accessing the thing it points to
+	// NOTE FOR ME . accessing the unique pointer, -> accessing the thing it points to
 
 	Rectangle<int> displayArea = getLocalBounds();
 	displayArea.removeFromBottom(getHeight()/2);
@@ -79,6 +86,8 @@ void DelayPluginAudioProcessorEditor::resized()
 	Rectangle<int> feedbackArea = getLocalBounds();
 	feedbackArea.removeFromTop(getHeight() / 2);
 	feedbackArea = feedbackArea.removeFromRight(getWidth() / 4);
+	feedbackArea = feedbackArea.withSizeKeepingCentre(feedbackArea.getWidth(), feedbackArea.getWidth());
+	feedbackArea.translate(getWidth() * -0.01, 0);
 	feedbackSlider->setBounds(feedbackArea); //feedback slider on the right 1/4 of window
 
 	Rectangle<int> delayModeArea = getLocalBounds();
@@ -91,6 +100,7 @@ void DelayPluginAudioProcessorEditor::resized()
 	Rectangle<int> delayArea1 = getLocalBounds();
 	delayArea1 = delayArea1.removeFromBottom(getHeight()/3);
 	delayArea1 = delayArea1.removeFromLeft(getWidth() / 4);
+	delayArea1 = delayArea1.withSizeKeepingCentre(delayArea1.getWidth() * 0.8, delayArea1.getWidth() * 0.8);
 	delayTimeSlider->setBounds(delayArea1); //manual delay slider on the left 1/4 of window
 
 	delayArea1.translate(getWidth() / 4, 0);

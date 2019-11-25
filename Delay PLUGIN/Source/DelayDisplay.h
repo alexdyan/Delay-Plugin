@@ -13,9 +13,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
 
-//==============================================================================
-/*
-*/
+
 class DelayDisplay    : public Component
 {
 public:

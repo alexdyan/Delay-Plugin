@@ -11,14 +11,13 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "DelayDisplay.h"
 
-//==============================================================================
 DelayDisplay::DelayDisplay(DelayPluginAudioProcessor& p):processor(p) //copy the reference to p
 {
     // In your constructor, you should add any child components, and
     // initialise any special settings that your component needs.
 
 	setColour(ColourIds::backgroundColourId, Colours::black);
-	setColour(ColourIds::mainWaveColourId, Colours::pink);
+	setColour(ColourIds::mainWaveColourId, Colours::grey);
 	setColour(ColourIds::delayedWaveColourId, Colours::red);
 }
 
@@ -50,11 +49,11 @@ void DelayDisplay::paint (Graphics& g)
 		p.quadraticTo(controlPointX, controlPointY, endPointX, endPointY);
 	}
 	g.setColour(findColour(ColourIds::mainWaveColourId));
-	g.strokePath(p, PathStrokeType(2.f)); //path thickness
+	g.strokePath(p, PathStrokeType(2.5f)); //path thickness
 
 	p.applyTransform(AffineTransform::translation(delayTime/10, 0));
 	g.setColour(findColour(ColourIds::delayedWaveColourId));
-	g.strokePath(p, PathStrokeType(2.f)); //path thickness
+	g.strokePath(p, PathStrokeType(2.5f)); //path thickness
 
 }
 

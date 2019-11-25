@@ -11,14 +11,20 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "DelayDisplay.h"
 
-DelayDisplay::DelayDisplay(DelayPluginAudioProcessor& p):processor(p) //copy the reference to p
+DelayDisplay::DelayDisplay(DelayPluginAudioProcessor& p, float &curDelayTime):processor(p) //copy the reference to p
 {
     // In your constructor, you should add any child components, and
     // initialise any special settings that your component needs.
 
+	processor.parameters.addParameterListener("delayTime", this); //these are the listeners
+	processor.parameters.addParameterListener("delayMode", this);
+	currentDelayTime = &curDelayTime;
+
 	setColour(ColourIds::backgroundColourId, Colours::black);
 	setColour(ColourIds::mainWaveColourId, Colours::grey);
 	setColour(ColourIds::delayedWaveColourId, Colours::red);
+
+	lastDelayTime = *processor.parameters.getRawParameterValue("delayTime");
 }
 
 DelayDisplay::~DelayDisplay()
@@ -51,7 +57,7 @@ void DelayDisplay::paint (Graphics& g)
 	g.setColour(findColour(ColourIds::mainWaveColourId));
 	g.strokePath(p, PathStrokeType(2.5f)); //path thickness
 
-	p.applyTransform(AffineTransform::translation(delayTime/10, 0));
+	p.applyTransform(AffineTransform::translation(lastDelayTime/10, 0));
 	g.setColour(findColour(ColourIds::delayedWaveColourId));
 	g.strokePath(p, PathStrokeType(2.5f)); //path thickness
 
@@ -59,6 +65,35 @@ void DelayDisplay::paint (Graphics& g)
 
 void DelayDisplay::updateDelayTime() {
 	//gui world delayTime variable
-	delayTime = *processor.parameters.getRawParameterValue("delayTime");
+	lastDelayTime = *processor.parameters.getRawParameterValue("delayTime");
 	repaint();
+}
+
+//this part is so we can access delayTime from the gui world, but don't know how/why it works
+//see updateDelayTime in DelayDisplay.cpp
+void DelayDisplay::parameterChanged(const String& parameterId, float newParameterValue) {
+
+	if (parameterId.equalsIgnoreCase("delayTime")) {
+		auto updateDisplay = [&] { //lambda -> function that's also a variable or something
+			updateDelayTime(); //set the gui delayTime to the actual slider delayTime value
+		};
+		MessageManager::callAsync(updateDisplay); //don't know
+	}
+
+	else if (parameterId.equalsIgnoreCase("delayMode")) {
+		if (newParameterValue > 1) { //lfo and amplitude mode
+			startTimerHz(30);
+		}
+		if (newParameterValue == 1) {
+			stopTimer();
+		}
+	}
+}
+
+void DelayDisplay::timerCallback() {
+
+	if (lastDelayTime != *currentDelayTime) {
+		lastDelayTime = *currentDelayTime;
+		repaint();
+	}
 }

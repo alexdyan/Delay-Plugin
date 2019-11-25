@@ -70,6 +70,7 @@ public:
     ////////////////////////////////////////////////////////////////////////////////
 
 	AudioProcessorValueTreeState parameters;
+	float currentDelayTime = 0;
 
 private:
     void fillDelayBuffer(AudioBuffer<float> &buffer, int channel);
@@ -79,7 +80,6 @@ private:
 
 
 	double lastSampleRate;
-	float currentDelayTime = 0;
 	float lastDelayTime; //need this for smoothing the delay time
 	int writePosition = 0;
 

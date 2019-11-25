@@ -16,7 +16,7 @@
 typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment; //the thing for attaching the slider info to the layout
 
 
-class DelayPluginAudioProcessorEditor  : public AudioProcessorEditor, AudioProcessorValueTreeState::Listener //inherit from the audio tree listener (to access the delay time in the gui)
+class DelayPluginAudioProcessorEditor : public AudioProcessorEditor
 {
 public:
     DelayPluginAudioProcessorEditor (DelayPluginAudioProcessor&);
@@ -24,7 +24,6 @@ public:
 
     void paint (Graphics&) override;
     void resized() override;
-	virtual void parameterChanged(const String &parameterId, float newParameterValue) override;
 
 private:
     // This reference is provided as a quick way for your editor to
@@ -33,15 +32,21 @@ private:
 
 	std::unique_ptr<Slider> delayTimeSlider;
 	std::unique_ptr<SliderAttachment> delayTimeAttachment; //how you link the gui elements to the actual delay variables
-	
+	std::unique_ptr<Label> delayTimeLabel;
+
 	std::unique_ptr<Slider> lfoFreqSlider;
 	std::unique_ptr<SliderAttachment> lfoFreqAttachment;
+	std::unique_ptr<Label> lfoFreqLabel;
+
+	std::unique_ptr<Label> amplitudeLabel;
 
 	std::unique_ptr<Slider> feedbackSlider;
 	std::unique_ptr<SliderAttachment> feedbackAttachment;
+	std::unique_ptr<Label> feedbackLabel;
 
 	std::unique_ptr<Slider> delayModeSlider;
 	std::unique_ptr<SliderAttachment> delayModeAttachment;
+	std::unique_ptr<Label> delayModeLabel;
 
 	std::unique_ptr<DelayDisplay> display;
     

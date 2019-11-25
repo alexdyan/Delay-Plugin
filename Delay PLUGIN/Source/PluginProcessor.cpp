@@ -343,8 +343,20 @@ AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createL
 	layout.add( std::make_unique<AudioParameterFloat>( "feedback", "Feedback", NormalisableRange<float>(0.0, 1.0), 0.0) );
 	layout.add( std::make_unique<AudioParameterFloat>( "lfoFrequency", "LFO Frequency", NormalisableRange<float>(0.1, 4.0), 0.1) );
 
+	auto intToString = [&] (int value, int maxLength) {
+		switch (value) {
+		case 1:
+			return "Manual";
+		case 2:
+			return "LFO";
+		case 3:
+			return "Amplitude";
+		default:
+			jassertfalse;
+		}
+	};
 	//this parameter is for a 3-way toggle switch that allows the user to choose from manual delay time (the knob), lfo modulated delay time, or input signal amplitude modulated delay time
-	layout.add(std::make_unique<AudioParameterInt>("delayMode", "Delay Mode", 1, 3, 0));
+	layout.add(std::make_unique<AudioParameterInt>("delayMode", "Delay Mode", 1, 3, 0, String(), intToString));
 
 	return layout;
 }

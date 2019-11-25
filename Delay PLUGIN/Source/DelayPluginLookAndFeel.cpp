@@ -39,7 +39,16 @@ void DelayPluginLookAndFeel::drawLinearSlider(Graphics& g, int x, int y, int wid
 
 	g.fillRect(x, y+height/3, width, height/3);
 
-	g.setColour(Colour(255, 255, 255));
-	g.drawRect(x, y+height/3, width/3, height/3, 2); //this position is technically mode 1
+	g.setColour(s.findColour(Slider::ColourIds::thumbColourId));
+	//draw the "thumb" of the slider as a rectangle in correct position
+	if (sliderPos == 220) {
+		g.drawRect(x+width/3, y + height / 3, width / 3, height / 3, 2);
+	}
+	else if (sliderPos == 348){
+		g.drawRect(x+(2*width/3), y + height / 3, width / 3, height / 3, 2);
+	}
+	else {
+		g.drawRect(x, y + height / 3, width / 3, height / 3, 2);
+	}
 
 }

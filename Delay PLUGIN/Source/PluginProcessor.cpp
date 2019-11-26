@@ -344,9 +344,34 @@ void DelayPluginAudioProcessor::feedback(AudioBuffer<float>& buffer, int channel
 //these are the parameters that the user can control in the interface
 AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createLayout() {
 	AudioProcessorValueTreeState::ParameterLayout layout;
-	layout.add( std::make_unique<AudioParameterFloat>( "delayTime", "Delay Time (ms)", NormalisableRange<float>(0.0, 2000.0), 500.0 ) );
-	layout.add( std::make_unique<AudioParameterFloat>( "feedback", "Feedback", NormalisableRange<float>(0.0, 1.0), 0.0) );
-	layout.add( std::make_unique<AudioParameterFloat>( "lfoFrequency", "LFO Frequency", NormalisableRange<float>(0.1, 4.0), 0.1) );
+
+	auto floatToStringDelay = [&] (float value, int maxLength) {
+		int temp = value * 100;
+		value = float(temp) / 100.0;
+		String units = "ms";
+		return String(value) + units;
+	};
+	layout.add( std::make_unique<AudioParameterFloat>( "delayTime", "Delay Time (ms)", NormalisableRange<float>(0.0, 2000.0), 500.0, String(), AudioProcessorParameter::genericParameter, floatToStringDelay ) );
+	
+
+	auto floatToStringLFO = [&](float value, int maxLength) {
+		int temp = value * 100;
+		value = float(temp) / 100.0;
+		String units = "Hz";
+		return String(value) + units;
+	};
+	layout.add(std::make_unique<AudioParameterFloat>("lfoFrequency", "LFO Frequency", NormalisableRange<float>(0.1, 4.0), 0.1, String(), AudioProcessorParameter::genericParameter, floatToStringLFO));
+	
+	
+	auto floatToStringFeedback = [&](float value, int maxLength) {
+		int temp = value * 100;
+		value = float(temp) / 100.0;
+		value *= 100.0;
+		String units = "%";
+		return String(value) + units;
+	};
+	layout.add( std::make_unique<AudioParameterFloat>( "feedback", "Feedback", NormalisableRange<float>(0.0, 1.0), 0.0, String(), AudioProcessorParameter::genericParameter, floatToStringFeedback) );
+
 
 	auto intToString = [&] (int value, int maxLength) {
 		switch (value) {

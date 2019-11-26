@@ -29,6 +29,7 @@ DelayDisplay::DelayDisplay(DelayPluginAudioProcessor& p, float &curDelayTime):pr
 
 DelayDisplay::~DelayDisplay()
 {
+	//do this so that when you close and reopen the plugin window, the editor doesn't try to access the old listeners that don't exist anymore (crash)
 	processor.parameters.removeParameterListener("delayTime", this);
 	processor.parameters.removeParameterListener("delayMode", this);
 }

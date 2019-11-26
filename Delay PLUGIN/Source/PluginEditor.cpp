@@ -76,10 +76,6 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
 	lfoFreqAttachment.reset( new SliderAttachment( processor.parameters, "lfoFrequency", *lfoFreqSlider.get() ) );
 	delayModeAttachment.reset( new SliderAttachment( processor.parameters, "delayMode", *delayModeSlider.get() ) );
 
-	//setting slider value units DOESN'T WORK
-	delayTimeSlider->setNumDecimalPlacesToDisplay(2);
-	delayTimeSlider->setTextValueSuffix("ms");
-
 	//always set the size at the end of the constructor
     setSize (600, 600);
 }
@@ -98,11 +94,6 @@ void DelayPluginAudioProcessorEditor::paint (Graphics& g)
     g.setColour (Colours::white);
     g.setFont (15.0f);
 
-	g.drawRect(delayTimeLabel->getBounds().toFloat(), 2.0f);
-	g.setColour(Colours::blue);
-	g.drawRect(lfoFreqLabel->getBounds().toFloat(), 2.0f);
-	g.setColour(Colours::green);
-	g.drawRect(amplitudeLabel->getBounds().toFloat(), 2.0f);
 }
 
 void DelayPluginAudioProcessorEditor::resized()

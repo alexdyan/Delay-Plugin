@@ -42,7 +42,7 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
 
 	//amplitude modulation "slider"
 	amplitudeLabel.reset(new Label("amplitudeLabel", "Amplitude Modulation"));
-	addAndMakeVisible(lfoFreqLabel.get());
+	addAndMakeVisible(amplitudeLabel.get());
 
 
 	//feedback slider
@@ -101,6 +101,8 @@ void DelayPluginAudioProcessorEditor::paint (Graphics& g)
 	g.drawRect(delayTimeLabel->getBounds().toFloat(), 2.0f);
 	g.setColour(Colours::blue);
 	g.drawRect(lfoFreqLabel->getBounds().toFloat(), 2.0f);
+	g.setColour(Colours::green);
+	g.drawRect(amplitudeLabel->getBounds().toFloat(), 2.0f);
 }
 
 void DelayPluginAudioProcessorEditor::resized()

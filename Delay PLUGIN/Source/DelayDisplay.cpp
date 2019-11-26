@@ -29,6 +29,8 @@ DelayDisplay::DelayDisplay(DelayPluginAudioProcessor& p, float &curDelayTime):pr
 
 DelayDisplay::~DelayDisplay()
 {
+	processor.parameters.removeParameterListener("delayTime", this);
+	processor.parameters.removeParameterListener("delayMode", this);
 }
 
 void DelayDisplay::paint (Graphics& g)

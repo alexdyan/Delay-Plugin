@@ -34,6 +34,15 @@ DelayDisplay::~DelayDisplay()
 	processor.parameters.removeParameterListener("delayMode", this);
 }
 
+double map2(float value, float signalMin, float signalMax, float delayTimeMin, float delayTimeMax) {
+	float current = value - signalMin;
+	float oldRange = signalMax - signalMin;
+	float newRange = delayTimeMax - delayTimeMin;
+
+	float answer = (current * newRange / oldRange) + delayTimeMin;
+	return answer;
+}
+
 void DelayDisplay::paint (Graphics& g)
 {
 	//	float controlPointX = JUCE_LIVE_CONSTANT(34.5); cool for testing purposes
@@ -60,7 +69,7 @@ void DelayDisplay::paint (Graphics& g)
 	g.setColour(findColour(ColourIds::mainWaveColourId));
 	g.strokePath(p, PathStrokeType(2.5f)); //path thickness
 
-	p.applyTransform(AffineTransform::translation(lastDelayTime/10, 0));
+	p.applyTransform(AffineTransform::translation(map2(lastDelayTime, 0.0, 2000.0, 0.0, getWidth()*0.3), 0));	
 	g.setColour(findColour(ColourIds::delayedWaveColourId));
 	g.strokePath(p, PathStrokeType(2.5f)); //path thickness
 

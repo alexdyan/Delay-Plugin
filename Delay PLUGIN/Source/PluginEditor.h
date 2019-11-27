@@ -16,7 +16,7 @@
 typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment; //the thing for attaching the slider info to the layout
 
 
-class DelayPluginAudioProcessorEditor : public AudioProcessorEditor
+class DelayPluginAudioProcessorEditor : public AudioProcessorEditor, AudioProcessorValueTreeState::Listener
 {
 public:
     DelayPluginAudioProcessorEditor (DelayPluginAudioProcessor&);
@@ -24,6 +24,7 @@ public:
 
     void paint (Graphics&) override;
     void resized() override;
+	void parameterChanged(const String& parameterId, float newParameterValue);
 
 private:
     // This reference is provided as a quick way for your editor to

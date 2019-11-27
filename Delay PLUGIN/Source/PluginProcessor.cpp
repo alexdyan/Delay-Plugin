@@ -157,6 +157,15 @@ bool DelayPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 
 ///////////////////////////////////////////////////////////////////////////////////
 
+double map(float value, float signalMin, float signalMax, float delayTimeMin, float delayTimeMax) {
+	float current = value - signalMin;
+	float oldRange = signalMax - signalMin;
+	float newRange = delayTimeMax - delayTimeMin;
+
+	float answer = (current * newRange / oldRange) + delayTimeMin;
+	return answer;
+}
+
 void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
     ScopedNoDenormals noDenormals;
@@ -195,14 +204,14 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 		float currentLFOAmplitude = 0;
 		currentLFOAmplitude = lfoBuffer.getRMSLevel(0, 0, buffer.getNumSamples()); //get the rms (amplitude) of the lfo signal
 
-		currentDelayTime = ceil(currentLFOAmplitude * 1000);
+		currentDelayTime = ceil(map(currentLFOAmplitude, 0.0, 1.0, 0.0, *parameters.getRawParameterValue("delayTime")));
 	}
 
 	//amplitude modulates = get RMS level (amplitude) of the input signal (the buffer), scale it and set it as currentDelayTime
 	else if (currentDelayMode == DelayMode::amplitudeMode) {
 		float currentInputAmplitude = 0;
 		currentInputAmplitude = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-		currentDelayTime = ceil(currentInputAmplitude * 1000);
+		currentDelayTime = ceil(map(currentInputAmplitude, 0.0, 1.0, 0.0, *parameters.getRawParameterValue("delayTime")));
 	}
 
 	else {}
@@ -351,7 +360,7 @@ AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createL
 		String units = "ms";
 		return String(value) + units;
 	};
-	layout.add( std::make_unique<AudioParameterFloat>( "delayTime", "Delay Time (ms)", NormalisableRange<float>(0.0, 2000.0), 500.0, String(), AudioProcessorParameter::genericParameter, floatToStringDelay ) );
+	layout.add(std::make_unique<AudioParameterFloat>("delayTime", "Delay Time (ms)", NormalisableRange<float>(0.0, 2000.0), 500.0, String(), AudioProcessorParameter::genericParameter, floatToStringDelay));
 	
 
 	auto floatToStringLFO = [&](float value, int maxLength) {
@@ -370,7 +379,7 @@ AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createL
 		String units = "%";
 		return String(value) + units;
 	};
-	layout.add( std::make_unique<AudioParameterFloat>( "feedback", "Feedback", NormalisableRange<float>(0.0, 1.0), 0.0, String(), AudioProcessorParameter::genericParameter, floatToStringFeedback) );
+	layout.add(std::make_unique<AudioParameterFloat>("feedback", "Feedback", NormalisableRange<float>(0.0, 1.0), 0.0, String(), AudioProcessorParameter::genericParameter, floatToStringFeedback));
 
 
 	auto intToString = [&] (int value, int maxLength) {

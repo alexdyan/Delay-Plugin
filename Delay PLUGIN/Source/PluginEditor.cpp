@@ -14,7 +14,7 @@
 DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
-	//processor.parameters.addParameterListener("delayTime", this); //this is the listener
+	processor.parameters.addParameterListener("delayMode", this); //this is the listener
 
 	//delay time slider
 	delayTimeSlider.reset(new Slider());							//initialize the slider
@@ -154,4 +154,23 @@ void DelayPluginAudioProcessorEditor::resized()
 
 }
 
-//I had the function down here that did the complicated parameter listener delay display stuff
+void DelayPluginAudioProcessorEditor::parameterChanged(const String& parameterId, float newParameterValue) {
+	String labelText;
+
+	//you have to do this bc you can't do gui stuff on the audio thread bc it will yell at you and you're calling this asynchronously to avoid that
+	if (newParameterValue == 1) { //manual delay mode
+		auto updateLabel = [&] { //lambda function
+			delayTimeLabel->setText("Delay Time", NotificationType::dontSendNotification);
+		};
+
+		MessageManager::callAsync(updateLabel); //call asynchronously
+	}
+
+	else { //lfo and amplitude modes
+		auto updateLabel = [&] {
+			delayTimeLabel->setText("Max Delay Time", NotificationType::dontSendNotification);
+		};
+
+		MessageManager::callAsync(updateLabel);
+	}
+}

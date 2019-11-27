@@ -33,8 +33,8 @@ void DelayPluginLookAndFeel::drawRotarySlider(Graphics& g, int x, int y, int wid
 
 void DelayPluginLookAndFeel::drawLinearSlider(Graphics& g, int x, int y, int width, int height, float sliderPos, float minSliderPos, float maxSliderPos, const Slider::SliderStyle, Slider& s) {
 
-	ColourGradient modes = ColourGradient(Colour::Colour(225, 0, 0), x+25, y + height / 3, Colour::Colour(255, 0, 90), x + width-25, y + height / 3, false);
-	modes.addColour(0.5, Colour::Colour(255, 0, 35));
+	ColourGradient modes = ColourGradient(Colour(225, 0, 0), x+25, y + height / 3, Colour(255, 0, 90), x + width-25, y + height / 3, false);
+	modes.addColour(0.5, Colour(255, 0, 35));
 	g.setGradientFill(modes);
 
 	g.fillRect(x, y+height/3, width, height/3);

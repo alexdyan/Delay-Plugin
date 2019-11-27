@@ -211,7 +211,15 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 	else if (currentDelayMode == DelayMode::amplitudeMode) {
 		float currentInputAmplitude = 0;
 		currentInputAmplitude = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-		currentDelayTime = ceil(map(currentInputAmplitude, 0.0, 1.0, 0.0, *parameters.getRawParameterValue("delayTime")));
+		currentDelayTime = ceil(map(currentInputAmplitude, 0.0, *parameters.getRawParameterValue("amplitudeThresh"), 0.0, *parameters.getRawParameterValue("delayTime")));
+		
+		if (currentDelayTime > 2000.0) {
+			currentDelayTime = 2000.0;
+		}
+		else if (currentDelayTime < 0.0) {
+			currentDelayTime = 0.0;
+		}
+		//DBG(currentDelayTime);
 	}
 
 	else {}
@@ -371,7 +379,7 @@ AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createL
 	};
 	layout.add(std::make_unique<AudioParameterFloat>("lfoFrequency", "LFO Frequency", NormalisableRange<float>(0.1, 4.0), 0.1, String(), AudioProcessorParameter::genericParameter, floatToStringLFO));
 	
-	layout.add(std::make_unique<AudioParameterFloat>("amplitudeThresh", "Amplitude Threshold", NormalisableRange<float>(0.0, 1.0), 0.5));
+	layout.add(std::make_unique<AudioParameterFloat>("amplitudeThresh", "Amplitude Threshold", NormalisableRange<float>(0.05, 1.0), 0.5));
 	
 	auto floatToStringFeedback = [&](float value, int maxLength) {
 		int temp = value * 100;

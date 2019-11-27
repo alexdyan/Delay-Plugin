@@ -81,6 +81,7 @@ void DelayDisplay::updateDelayTime() {
 	repaint();
 }
 
+
 //this part is so we can access delayTime from the gui world, but don't know how/why it works
 //see updateDelayTime in DelayDisplay.cpp
 void DelayDisplay::parameterChanged(const String& parameterId, float newParameterValue) {

@@ -40,8 +40,15 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
 	addAndMakeVisible(lfoFreqLabel.get());
 
 
-	//amplitude modulation "slider"
-	amplitudeLabel.reset(new Label("amplitudeLabel", "Amplitude Modulation"));
+	//amplitude modulation slider
+	amplitudeSlider.reset(new Slider());
+	amplitudeSlider->setSliderStyle(Slider::SliderStyle::Rotary);
+	//colors
+	amplitudeSlider->setColour(Slider::ColourIds::backgroundColourId, Colour(255, 0, 100));
+	amplitudeSlider->setColour(Slider::ColourIds::rotarySliderOutlineColourId, Colour(255, 0, 100));
+	addAndMakeVisible(amplitudeSlider.get());
+	//label
+	amplitudeLabel.reset(new Label("amplitudeLabel", "Amplitude Threshold"));
 	addAndMakeVisible(amplitudeLabel.get());
 
 
@@ -49,8 +56,8 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
 	feedbackSlider.reset(new Slider());
 	feedbackSlider->setSliderStyle( Slider::SliderStyle::Rotary );
 	//colors
-	feedbackSlider->setColour(Slider::ColourIds::backgroundColourId, Colour(255, 0, 100));
-	feedbackSlider->setColour(Slider::ColourIds::rotarySliderOutlineColourId, Colour(255, 0, 100));
+	feedbackSlider->setColour(Slider::ColourIds::backgroundColourId, Colour(255, 0, 160));
+	feedbackSlider->setColour(Slider::ColourIds::rotarySliderOutlineColourId, Colour(255, 0, 160));
 	addAndMakeVisible(feedbackSlider.get());
 	//label
 	feedbackLabel.reset(new Label("feedbackLabel", "Feedback"));
@@ -72,8 +79,9 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
 
 	//attachments
 	delayTimeAttachment.reset( new SliderAttachment( processor.parameters, "delayTime", *delayTimeSlider.get() ) );
+	lfoFreqAttachment.reset(new SliderAttachment(processor.parameters, "lfoFrequency", *lfoFreqSlider.get()));
+	amplitudeAttachment.reset(new SliderAttachment(processor.parameters, "amplitudeThresh", *amplitudeSlider.get()));
 	feedbackAttachment.reset( new SliderAttachment( processor.parameters, "feedback", *feedbackSlider.get() ) );
-	lfoFreqAttachment.reset( new SliderAttachment( processor.parameters, "lfoFrequency", *lfoFreqSlider.get() ) );
 	delayModeAttachment.reset( new SliderAttachment( processor.parameters, "delayMode", *delayModeSlider.get() ) );
 
 	//always set the size at the end of the constructor
@@ -130,7 +138,7 @@ void DelayPluginAudioProcessorEditor::resized()
 	lfoFreqSlider->setBounds(delayArea1); //lfo frequency slider on the left 2/4 of window
 
 	delayArea1.translate(getWidth() / 4, 0);
-	//this is the space for amplitude modulated delay
+	amplitudeSlider->setBounds(delayArea1); //amplitude threshold slider on right 2/4 of window
 
 
 	//label positioning

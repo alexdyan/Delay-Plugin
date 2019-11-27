@@ -371,6 +371,7 @@ AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createL
 	};
 	layout.add(std::make_unique<AudioParameterFloat>("lfoFrequency", "LFO Frequency", NormalisableRange<float>(0.1, 4.0), 0.1, String(), AudioProcessorParameter::genericParameter, floatToStringLFO));
 	
+	layout.add(std::make_unique<AudioParameterFloat>("amplitudeThresh", "Amplitude Threshold", NormalisableRange<float>(0.0, 1.0), 0.5));
 	
 	auto floatToStringFeedback = [&](float value, int maxLength) {
 		int temp = value * 100;

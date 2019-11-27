@@ -39,6 +39,8 @@ private:
 	std::unique_ptr<SliderAttachment> lfoFreqAttachment;
 	std::unique_ptr<Label> lfoFreqLabel;
 
+	std::unique_ptr<Slider> amplitudeSlider;
+	std::unique_ptr<SliderAttachment> amplitudeAttachment;
 	std::unique_ptr<Label> amplitudeLabel;
 
 	std::unique_ptr<Slider> feedbackSlider;

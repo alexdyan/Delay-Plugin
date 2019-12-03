@@ -224,7 +224,7 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 
 	else {}
 
-	for (int i = 0; i < buffer.getNumChannels(); i++) {
+    for (int i = 0; i < buffer.getNumChannels(); i++) {
 		//do the feedback
 		float* drySignalBuffer = buffer.getWritePointer(i); //buffer to add the main signal to for feedback
 		fillDelayBuffer(buffer, i);
@@ -235,20 +235,14 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 		float* bufferData = buffer.getWritePointer(i);
 
 		for (int j = 0; j < buffer.getNumSamples(); j++) {
-			bufferData[j] /= magnitude;
+            bufferData[j] *= 0.4; //this hardcoding is to fix the clipping NOW lol
+//			bufferData[j] /= magnitude;
 		}
 	}
 
 	//update the writePosition
 	writePosition += numSamples;
 	writePosition %= delaySamples;
-
-//		how to combine noise with the signal
-//		for (int i = 0; i < buffer.getNumSamples(); i++)
-//		{
-//			buffer[i] *= Random().nextFloat();
-//		}
-
 }
 
 
@@ -292,6 +286,7 @@ void DelayPluginAudioProcessor::fillDelayBuffer(AudioBuffer<float> &buffer, int 
 {
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
+    float gain = *parameters.getRawParameterValue("feedback");
 
 	if (writePosition + numSamples >= delaySamples)
 	{
@@ -299,11 +294,11 @@ void DelayPluginAudioProcessor::fillDelayBuffer(AudioBuffer<float> &buffer, int 
 		int leftOverSamples = numSamples - difference;
 
 		//check if you are at the end of buffer and have to wrap around and write from beginning
-		delayBuffer.copyFrom(channel, writePosition, buffer, channel, 0, difference);
-		delayBuffer.copyFrom(channel, 0, buffer, channel, difference, leftOverSamples);
+        delayBuffer.copyFromWithRamp(channel, writePosition, buffer.getReadPointer(channel), difference, gain, gain);
+        delayBuffer.copyFromWithRamp(channel, 0, buffer.getReadPointer(channel), leftOverSamples, gain, gain);
 	}
 	else {
-		delayBuffer.copyFrom(channel, writePosition, buffer, channel, 0, numSamples);
+        delayBuffer.copyFromWithRamp(channel, writePosition, buffer.getReadPointer(channel), numSamples, gain, gain);
 	}
 }
 
@@ -315,14 +310,16 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 	//wrap around from end of last buffer to start of next one
 	//delayTime is ms and fs is in seconds -> math to compensate
 	//mod by delaybuffer length to wrap around when near the end of buffer
-	int readPosition = static_cast<int>(delaySamples + writePosition - (lastSampleRate * currentDelayTime/1000) ) % delaySamples;
+	int readPosition = static_cast<int>(delaySamples + writePosition - (lastSampleRate * lastDelayTime/1000) ) % delaySamples;
 	
-	if (lastDelayTime != currentDelayTime) { //if you turn the knob
-		if (smoothedValue.getTargetValue() != currentDelayTime) { //if you keep turning the knob
-			smoothedValue.setTargetValue(currentDelayTime); //update the target value
-			lastDelayTime = smoothedValue.getNextValue(); //do the smoothing
-		}
-	}
+//	if (lastDelayTime != currentDelayTime) { //if you turn the knob
+//		if (smoothedValue.getTargetValue() != currentDelayTime) { //if you keep turning the knob
+//			smoothedValue.setTargetValue(currentDelayTime); //update the target value
+//			lastDelayTime = smoothedValue.getNextValue(); //do the smoothing
+//		}
+//	}
+    smoothedValue.setTargetValue(currentDelayTime); //update the target value
+    lastDelayTime = smoothedValue.getNextValue(); //do the smoothing
 
 	if (readPosition + numSamples >= delaySamples) {	//if you exceed length of delay buffer
 		int difference = delaySamples - readPosition;	//number of samples left until the end of delaybuffer
@@ -340,19 +337,19 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 void DelayPluginAudioProcessor::feedback(AudioBuffer<float>& buffer, int channel, float* drySignalBuffer) {
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
-	float gain = 0.7;
-	gain = *parameters.getRawParameterValue("feedback");
+//	float gain = 0.7;
+//	gain = *parameters.getRawParameterValue("feedback");
 	//DBG(gain);
 
 	if (numSamples + writePosition >= delaySamples) {
 		int difference = delaySamples - writePosition;
 		int leftOverSamples = numSamples - difference;
 
-		delayBuffer.addFromWithRamp(channel, difference, drySignalBuffer, difference, gain, gain);
-		delayBuffer.addFromWithRamp(channel, 0, drySignalBuffer, leftOverSamples, gain, gain);
+		delayBuffer.addFromWithRamp(channel, difference, drySignalBuffer, difference, 0.7, 0.7);
+		delayBuffer.addFromWithRamp(channel, 0, drySignalBuffer, leftOverSamples, 0.7, 0.7);
 	}
 	else {
-		delayBuffer.addFromWithRamp(channel, writePosition, drySignalBuffer, numSamples, gain, gain);
+		delayBuffer.addFromWithRamp(channel, writePosition, drySignalBuffer, numSamples, 0.7, 0.7);
 	}
 }
 

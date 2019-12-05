@@ -312,14 +312,16 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 	//mod by delaybuffer length to wrap around when near the end of buffer
 	int readPosition = static_cast<int>(delaySamples + writePosition - (lastSampleRate * lastDelayTime/1000) ) % delaySamples;
 	
-//	if (lastDelayTime != currentDelayTime) { //if you turn the knob
-//		if (smoothedValue.getTargetValue() != currentDelayTime) { //if you keep turning the knob
-//			smoothedValue.setTargetValue(currentDelayTime); //update the target value
-//			lastDelayTime = smoothedValue.getNextValue(); //do the smoothing
-//		}
-//	}
-    smoothedValue.setTargetValue(currentDelayTime); //update the target value
-    lastDelayTime = smoothedValue.getNextValue(); //do the smoothing
+
+	if (lastDelayTime != currentDelayTime) { //if you turn the knob
+		if (smoothedValue.getTargetValue() != currentDelayTime) { //if you keep turning the knob
+			smoothedValue.setTargetValue(currentDelayTime); //update the target value
+			lastDelayTime = smoothedValue.getNextValue(); //do the smoothing
+			DBG(lastDelayTime);
+		}
+	}
+//    smoothedValue.setTargetValue(currentDelayTime); //update the target value
+//    lastDelayTime = smoothedValue.getNextValue(); //do the smoothing
 
 	if (readPosition + numSamples >= delaySamples) {	//if you exceed length of delay buffer
 		int difference = delaySamples - readPosition;	//number of samples left until the end of delaybuffer

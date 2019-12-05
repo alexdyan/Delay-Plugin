@@ -1,1 +1,0 @@
-move C:\Users\Alexandra D'Yan\Documents\VST Plugins\Delay-Plugin\Delay PLUGIN\Builds\VisualStudio2019\x64\Debug\VST3\Delay PLUGIN.vst3 C:\Program Files\Common Files\VST3

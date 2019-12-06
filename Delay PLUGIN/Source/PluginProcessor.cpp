@@ -224,13 +224,35 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 
 	else {}
 
+
     for (int i = 0; i < buffer.getNumChannels(); i++) {
-		//do the feedback
+
 		float* drySignalBuffer = buffer.getWritePointer(i); //buffer to add the main signal to for feedback
 		fillDelayBuffer(buffer, i);
-		readFromDelayBuffer(buffer, i);
+
+		//input volume
+		buffer.applyGainRamp(0, buffer.getNumSamples(), lastMasterGain, masterGain);
+		lastMasterGain = masterGain;
+
+		//read position
+		int readPos = static_cast<int>(delayBuffer.getNumSamples() + writePosition - (lastSampleRate * lastDelayTime / 1000)) % delayBuffer.getNumSamples();
+
+		//fading out
+		if (nextReadPos >= 0) {
+			if (nextReadPos >= 0) {
+				auto endGain = (readPos == nextReadPos) ? 1.0f : 0.0f;
+				readFromDelayBuffer(buffer, i, nextReadPos, 1.0, endGain, false);
+			}
+			//fading in
+			if (readPos != nextReadPos) {
+				readFromDelayBuffer(buffer, i, readPos, 0.0, 1.0, false);
+			}
+		}
+
+		fillDelayBuffer(buffer, i, writePosition, lastFeedbackGain, feedback, false);
 		feedback(buffer, i, drySignalBuffer);
 
+		//to avoid clipping
 		float magnitude = buffer.getMagnitude(i, 0, buffer.getNumSamples()); //returns value of loudest sample
 		float* bufferData = buffer.getWritePointer(i);
 
@@ -282,7 +304,7 @@ void DelayPluginAudioProcessor::setStateInformation (const void* data, int sizeI
 ///////////////////////////////////////////////////////////////////////////////////
 
 
-void DelayPluginAudioProcessor::fillDelayBuffer(AudioBuffer<float> &buffer, int channel)
+void DelayPluginAudioProcessor::fillDelayBuffer(AudioBuffer<float> &buffer, int channel, int writePos, float startGain, float endGain, bool replacing)
 {
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
@@ -302,7 +324,7 @@ void DelayPluginAudioProcessor::fillDelayBuffer(AudioBuffer<float> &buffer, int 
 	}
 }
 
-void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, int channel)
+void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, int channel, int readPos, float startGain, float endGain, bool replacing)
 {
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
@@ -310,7 +332,7 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 	//wrap around from end of last buffer to start of next one
 	//delayTime is ms and fs is in seconds -> math to compensate
 	//mod by delaybuffer length to wrap around when near the end of buffer
-	int readPosition = static_cast<int>(delaySamples + writePosition - (lastSampleRate * lastDelayTime/1000) ) % delaySamples;
+	//int readPosition = static_cast<int>(delaySamples + writePosition - (lastSampleRate * lastDelayTime/1000) ) % delaySamples;
 	
 
 	if (lastDelayTime != currentDelayTime) { //if you turn the knob
@@ -323,15 +345,15 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 //    smoothedValue.setTargetValue(currentDelayTime); //update the target value
 //    lastDelayTime = smoothedValue.getNextValue(); //do the smoothing
 
-	if (readPosition + numSamples >= delaySamples) {	//if you exceed length of delay buffer
-		int difference = delaySamples - readPosition;	//number of samples left until the end of delaybuffer
+	if (readPos + numSamples >= delaySamples) {	//if you exceed length of delay buffer
+		int difference = delaySamples - readPos;	//number of samples left until the end of delaybuffer
 		int leftOverSamples = numSamples - difference;	//number of samples that get cut off and have to be put at the beginning
 
-		buffer.copyFrom(channel, 0, delayBuffer, channel, readPosition, difference); //from readPosition to end of buffer
+		buffer.copyFrom(channel, 0, delayBuffer, channel, readPos, difference); //from readPosition to end of buffer
 		buffer.copyFrom(channel, difference, delayBuffer, channel, 0, leftOverSamples); //from 0 to left over amount
 	}
 	else { //if you do NOT have to wrap around to the beginning, read from delay buffer normally
-		buffer.copyFrom(channel, 0, delayBuffer, channel, readPosition, numSamples);
+		buffer.copyFrom(channel, 0, delayBuffer, channel, readPos, numSamples);
 	}
 
 }

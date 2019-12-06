@@ -6,4 +6,4 @@ DefaultGroupName=DelayPlugin
 OutputBaseFilename=DelayPlugin-windows
 
 [Files]
-Source: "Delay PLUGIN.vst3"; DestDir: "{app}\Steinberg\VST3"
+Source: "C:\Users\Alexandra D'Yan\Documents\VST Plugins\Delay-Plugin\Delay PLUGIN\Builds\VisualStudio2019\x64\Release\VST3\Delay PLUGIN.vst3"; DestDir: "{app}\Steinberg\VST3"

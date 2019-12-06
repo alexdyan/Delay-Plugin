@@ -480,6 +480,21 @@
 				<key>VERSION</key>
 				<integer>5</integer>
 			</dict>
+			<key>PACKAGE_SCRIPTS</key>
+			<dict>
+				<key>POSTINSTALL_PATH</key>
+				<dict>
+					<key>PATH_TYPE</key>
+					<integer>0</integer>
+				</dict>
+				<key>PREINSTALL_PATH</key>
+				<dict>
+					<key>PATH_TYPE</key>
+					<integer>0</integer>
+				</dict>
+				<key>RESOURCES</key>
+				<array/>
+			</dict>
 			<key>PACKAGE_SETTINGS</key>
 			<dict>
 				<key>AUTHENTICATION</key>
@@ -1111,17 +1126,8 @@
 						<string>English</string>
 						<key>VALUE</key>
 						<dict>
-							<key>PATH_TYPE</key>
-							<integer>0</integer>
-						</dict>
-					</dict>
-					<dict>
-						<key>LANGUAGE</key>
-						<string>Arabic</string>
-						<key>VALUE</key>
-						<dict>
 							<key>PATH</key>
-							<string>/Users/quinscacheri/Delay-Plugin/Delay PLUGIN/installer/Delay Plugin/message.txt</string>
+							<string>/Users/quinscacheri/Delay-Plugin/Delay PLUGIN/installer/mac/Delay Plugin/message.txt</string>
 							<key>PATH_TYPE</key>
 							<integer>0</integer>
 						</dict>

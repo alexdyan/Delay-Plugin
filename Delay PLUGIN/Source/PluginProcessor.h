@@ -79,7 +79,7 @@ private:
 	AudioProcessorValueTreeState::ParameterLayout createLayout();
 
 
-	double lastSampleRate;
+	double lastSampleRate;`
 	float lastDelayTime; //need this for smoothing the delay time
 	int writePosition = 0;
 

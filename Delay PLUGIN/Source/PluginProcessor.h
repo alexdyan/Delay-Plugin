@@ -14,6 +14,7 @@
 #include "LookAndFeelHolder.h"
 #include "DelayPluginLookAndFeel.h"
 #include "LFO.h"
+#include "Delay.h"
 
 /**
 */
@@ -73,6 +74,8 @@ public:
 	float currentDelayTime = 0;
 
 private:
+    Delay delay;
+    
     void fillDelayBuffer(AudioBuffer<float>& buffer, int channel, int writePos, float startGain, float endGain, bool replacing);
 	void readFromDelayBuffer(AudioBuffer<float> &buffer, int channel, int readPos, float startGain, float endGain, bool replacing);
 	void feedback(AudioBuffer<float>& buffer, int channel, float* drySignalBuffer);

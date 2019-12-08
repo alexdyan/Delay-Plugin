@@ -31,7 +31,8 @@ DelayPluginAudioProcessor::DelayPluginAudioProcessor() : parameters(*this, nullp
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       ), lfo(*this) // "this" is the reference to the processor bc WE ARE IN the processor rn
+                       ), lfo(*this), // "this" is the reference to the processor bc WE ARE IN the processor rn
+                            delay(*this)
 #endif
 {
     
@@ -118,7 +119,11 @@ void DelayPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
 	lastDelayTime = *parameters.getRawParameterValue("delayTime");
 	smoothedValue = SmoothedValue<float, ValueSmoothingTypes::Linear>(lastDelayTime); //initial value of current delayTime
-
+    
+    // initialize delay object
+    delay.prepareToPlay(sampleRate);
+    
+    // initialize lfo object
 	lfo.prepareToPlay(sampleRate);
 }
 
@@ -235,46 +240,8 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 	//input volume
 	buffer.applyGainRamp(0, buffer.getNumSamples(), lastGain, currentGain);
 	lastGain = currentGain;
-
-	//read position
-	int readPos = static_cast<int>(delayBuffer.getNumSamples() + writePosition - (lastSampleRate * lastDelayTime / 1000)) % delayBuffer.getNumSamples();
-
-	//fade out
-	if (nextReadPos >= 0) {
-		//fade out
-		auto endGain = (readPos == nextReadPos) ? 1.0f : 0.0f;
-		for (int i = 0; i < buffer.getNumChannels(); i++) {
-			readFromDelayBuffer(buffer, i, nextReadPos, 1.0, endGain, false);
-		}
-	}
-
-	//fade in
-	if (readPos != nextReadPos) {
-		for (int i = 0; i < buffer.getNumChannels(); i++) {
-			readFromDelayBuffer(buffer, i, readPos, 0.0, 1.0, false);
-		}
-	}
-
-	//apply feedback to delayed signal
-	for (int i = 0; i < buffer.getNumChannels(); i++) {
-		fillDelayBuffer(buffer, i, writePosition, lastFeedbackGain, currentFeedback, false);
-		lastFeedbackGain = currentFeedback;
-		//DBG(currentFeedback);
-		//feedback(buffer, i, drySignalBuffer);
-
-		//to avoid clipping
-		float magnitude = buffer.getMagnitude(i, 0, buffer.getNumSamples()); //returns value of loudest sample
-		float* bufferData = buffer.getWritePointer(i);
-
-		for (int j = 0; j < buffer.getNumSamples(); j++) {
-			bufferData[j] *= 0.4; //this hardcoding is to fix the clipping NOW lol
-		 //bufferData[j] /= magnitude;
-		}
-	}
-
-	//update the writePosition
-	writePosition += numSamples;
-	writePosition %= delaySamples;
+        
+    delay.processBlock(buffer);
 }
 
 

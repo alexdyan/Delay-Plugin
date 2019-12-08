@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="byL9Qz" name="Delay PLUGIN" projectType="audioplug" jucerVersion="5.4.3">
+<JUCERPROJECT id="byL9Qz" name="Delay PLUGIN" projectType="audioplug" jucerVersion="5.4.5">
   <MAINGROUP id="ekgmKz" name="Delay PLUGIN">
     <GROUP id="{40C428EA-45A7-0224-ED0F-38C39D188F0B}" name="Source">
+      <FILE id="V89ew3" name="Delay.cpp" compile="1" resource="0" file="Source/Delay.cpp"/>
+      <FILE id="UTmJ0t" name="Delay.h" compile="0" resource="0" file="Source/Delay.h"/>
       <FILE id="CO8cg8" name="DelayDisplay.cpp" compile="1" resource="0"
             file="Source/DelayDisplay.cpp"/>
       <FILE id="jPP5G0" name="DelayDisplay.h" compile="0" resource="0" file="Source/DelayDisplay.h"/>

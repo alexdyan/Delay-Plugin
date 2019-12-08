@@ -328,10 +328,10 @@
  #define JucePlugin_Enable_IAA             0
 #endif
 #ifndef  JucePlugin_Name
- #define JucePlugin_Name                   "DLay"
+ #define JucePlugin_Name                   "Dlay"
 #endif
 #ifndef  JucePlugin_Desc
- #define JucePlugin_Desc                   "DLay"
+ #define JucePlugin_Desc                   "Dlay"
 #endif
 #ifndef  JucePlugin_Manufacturer
  #define JucePlugin_Manufacturer           "Alex D\'Yan"
@@ -388,16 +388,16 @@
  #define JucePlugin_AUSubType              JucePlugin_PluginCode
 #endif
 #ifndef  JucePlugin_AUExportPrefix
- #define JucePlugin_AUExportPrefix         DLayAU
+ #define JucePlugin_AUExportPrefix         DlayAU
 #endif
 #ifndef  JucePlugin_AUExportPrefixQuoted
- #define JucePlugin_AUExportPrefixQuoted   "DLayAU"
+ #define JucePlugin_AUExportPrefixQuoted   "DlayAU"
 #endif
 #ifndef  JucePlugin_AUManufacturerCode
  #define JucePlugin_AUManufacturerCode     JucePlugin_ManufacturerCode
 #endif
 #ifndef  JucePlugin_CFBundleIdentifier
- #define JucePlugin_CFBundleIdentifier     com.yourcompany.DLay
+ #define JucePlugin_CFBundleIdentifier     com.yourcompany.Dlay
 #endif
 #ifndef  JucePlugin_RTASCategory
  #define JucePlugin_RTASCategory           0
@@ -415,7 +415,7 @@
  #define JucePlugin_RTASDisableMultiMono   0
 #endif
 #ifndef  JucePlugin_AAXIdentifier
- #define JucePlugin_AAXIdentifier          com.yourcompany.DLay
+ #define JucePlugin_AAXIdentifier          com.yourcompany.Dlay
 #endif
 #ifndef  JucePlugin_AAXManufacturerCode
  #define JucePlugin_AAXManufacturerCode    JucePlugin_ManufacturerCode
@@ -439,7 +439,7 @@
  #define JucePlugin_IAASubType             JucePlugin_PluginCode
 #endif
 #ifndef  JucePlugin_IAAName
- #define JucePlugin_IAAName                "Alex D'Yan: DLay"
+ #define JucePlugin_IAAName                "Alex D'Yan: Dlay"
 #endif
 #ifndef  JucePlugin_VSTNumMidiInputs
  #define JucePlugin_VSTNumMidiInputs       16

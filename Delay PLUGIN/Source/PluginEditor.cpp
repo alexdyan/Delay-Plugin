@@ -84,6 +84,8 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
 	feedbackAttachment.reset( new SliderAttachment( processor.parameters, "feedback", *feedbackSlider.get() ) );
 	delayModeAttachment.reset( new SliderAttachment( processor.parameters, "delayMode", *delayModeSlider.get() ) );
 
+    font = Font(Typeface::createSystemTypefaceFor(BinaryData::QuicksandVariableFontwght_ttf, BinaryData::QuicksandVariableFontwght_ttfSize));
+    
 	//always set the size at the end of the constructor
     setSize (600, 600);
 }
@@ -101,7 +103,15 @@ void DelayPluginAudioProcessorEditor::paint (Graphics& g)
 
     g.setColour (Colours::white);
     g.setFont (15.0f);
+}
 
+void DelayPluginAudioProcessorEditor::paintOverChildren(Graphics &g) {
+    g.setColour(Colours::darkgrey.darker(0.808925));
+    g.setFont(font);
+    float height = getWidth() * 0.129571;
+    font.setHeight(height * .75);
+    
+    g.drawFittedText("D'lay", 10, 10, height, getHeight()/20, Justification::left, 1);
 }
 
 void DelayPluginAudioProcessorEditor::resized()

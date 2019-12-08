@@ -24,7 +24,8 @@ public:
 
     void paint (Graphics&) override;
     void resized() override;
-	void parameterChanged(const String& parameterId, float newParameterValue);
+	void parameterChanged(const String& parameterId, float newParameterValue) override;
+    void paintOverChildren(Graphics &g) override;
 
 private:
     // This reference is provided as a quick way for your editor to
@@ -54,6 +55,8 @@ private:
 	std::unique_ptr<DelayDisplay> display;
     
     TextButton button;
-
+    
+    Font font;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DelayPluginAudioProcessorEditor)
 };

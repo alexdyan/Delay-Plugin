@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="byL9Qz" name="Delay PLUGIN" projectType="audioplug" jucerVersion="5.4.3">
-  <MAINGROUP id="ekgmKz" name="Delay PLUGIN">
+<JUCERPROJECT id="byL9Qz" name="Dlay" projectType="audioplug" jucerVersion="5.4.5"
+              pluginManufacturer="Alex D'Yan" pluginManufacturerCode="Dyan"
+              pluginCode="Dlay">
+  <MAINGROUP id="ekgmKz" name="Dlay">
     <GROUP id="{40C428EA-45A7-0224-ED0F-38C39D188F0B}" name="Source">
+      <FILE id="V89ew3" name="Delay.cpp" compile="1" resource="0" file="Source/Delay.cpp"/>
+      <FILE id="UTmJ0t" name="Delay.h" compile="0" resource="0" file="Source/Delay.h"/>
       <FILE id="CO8cg8" name="DelayDisplay.cpp" compile="1" resource="0"
             file="Source/DelayDisplay.cpp"/>
       <FILE id="jPP5G0" name="DelayDisplay.h" compile="0" resource="0" file="Source/DelayDisplay.h"/>
@@ -22,6 +26,8 @@
       <FILE id="wLqsuc" name="LFO.cpp" compile="1" resource="0" file="Source/LFO.cpp"/>
       <FILE id="NSTWyG" name="LFO.h" compile="0" resource="0" file="Source/LFO.h"/>
     </GROUP>
+    <FILE id="chEhlT" name="Quicksand-VariableFont:wght.ttf" compile="0"
+          resource="1" file="Quicksand/Quicksand-VariableFont:wght.ttf"/>
   </MAINGROUP>
   <EXPORTFORMATS>
     <VS2019 targetFolder="Builds/VisualStudio2019">

@@ -14,6 +14,7 @@
 #include "LookAndFeelHolder.h"
 #include "DelayPluginLookAndFeel.h"
 #include "LFO.h"
+#include "Delay.h"
 
 /**
 */
@@ -73,8 +74,10 @@ public:
 	float currentDelayTime = 0;
 
 private:
-    void fillDelayBuffer(AudioBuffer<float> &buffer, int channel);
-	void readFromDelayBuffer(AudioBuffer<float> &buffer, int channel);
+    Delay delay;
+    
+    void fillDelayBuffer(AudioBuffer<float>& buffer, int channel, int writePos, float startGain, float endGain, bool replacing);
+	void readFromDelayBuffer(AudioBuffer<float> &buffer, int channel, int readPos, float startGain, float endGain, bool replacing);
 	void feedback(AudioBuffer<float>& buffer, int channel, float* drySignalBuffer);
 	AudioProcessorValueTreeState::ParameterLayout createLayout();
 
@@ -82,6 +85,9 @@ private:
 	double lastSampleRate;
 	float lastDelayTime; //need this for smoothing the delay time
 	int writePosition = 0;
+	int nextReadPos = -1;
+	float lastGain = 0;
+	float lastFeedbackGain = 0;
 
 	AudioBuffer<float> delayBuffer;
 	SmoothedValue<float, ValueSmoothingTypes::Linear> smoothedValue;

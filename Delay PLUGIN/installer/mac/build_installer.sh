@@ -1,6 +1,6 @@
 #!/bin/bash
 
-xcodebuild -project ../../Builds/MacOSX/Delay\ PLUGIN.xcodeproj -configuration Release -scheme "Delay PLUGIN - All"
+xcodebuild -project ../../Builds/MacOSX/Dlay.xcodeproj -configuration Release -scheme "Dlay - All"
 packagesbuild Delay\ Plugin.pkgproj
-dmgcanvas Delay.dmgCanvas DyanDelay.dmg
+dmgcanvas Delay.dmgCanvas Dlay.dmg
 

@@ -31,7 +31,8 @@ DelayPluginAudioProcessor::DelayPluginAudioProcessor() : parameters(*this, nullp
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       ), lfo(*this) // "this" is the reference to the processor bc WE ARE IN the processor rn
+                       ), lfo(*this), // "this" is the reference to the processor bc WE ARE IN the processor rn
+                            delay(*this)
 #endif
 {
     
@@ -118,7 +119,11 @@ void DelayPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
 	lastDelayTime = *parameters.getRawParameterValue("delayTime");
 	smoothedValue = SmoothedValue<float, ValueSmoothingTypes::Linear>(lastDelayTime); //initial value of current delayTime
-
+    
+    // initialize delay object
+    delay.prepareToPlay(sampleRate);
+    
+    // initialize lfo object
 	lfo.prepareToPlay(sampleRate);
 }
 
@@ -189,6 +194,8 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
 	int currentDelayMode = int(*parameters.getRawParameterValue("delayMode"));
+	float currentFeedback = float(*parameters.getRawParameterValue("feedback"));
+	float currentGain = float(*parameters.getRawParameterValue("gain"));
 
 	//see which delay mode we're in and set currentDelayTime accordingly
 	//manual = get slider value from delayTime parameter
@@ -222,27 +229,11 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 		//DBG(currentDelayTime);
 	}
 
-	else {}
-
-    for (int i = 0; i < buffer.getNumChannels(); i++) {
-		//do the feedback
-		float* drySignalBuffer = buffer.getWritePointer(i); //buffer to add the main signal to for feedback
-		fillDelayBuffer(buffer, i);
-		readFromDelayBuffer(buffer, i);
-		feedback(buffer, i, drySignalBuffer);
-
-		float magnitude = buffer.getMagnitude(i, 0, buffer.getNumSamples()); //returns value of loudest sample
-		float* bufferData = buffer.getWritePointer(i);
-
-		for (int j = 0; j < buffer.getNumSamples(); j++) {
-            bufferData[j] *= 0.4; //this hardcoding is to fix the clipping NOW lol
-//			bufferData[j] /= magnitude;
-		}
-	}
-
-	//update the writePosition
-	writePosition += numSamples;
-	writePosition %= delaySamples;
+	//input volume
+	buffer.applyGainRamp(0, buffer.getNumSamples(), lastGain, currentGain);
+	lastGain = currentGain;
+        
+    delay.processBlock(buffer);
 }
 
 
@@ -282,27 +273,38 @@ void DelayPluginAudioProcessor::setStateInformation (const void* data, int sizeI
 ///////////////////////////////////////////////////////////////////////////////////
 
 
-void DelayPluginAudioProcessor::fillDelayBuffer(AudioBuffer<float> &buffer, int channel)
+void DelayPluginAudioProcessor::fillDelayBuffer(AudioBuffer<float> &buffer, int channel, int writePos, float startGain, float endGain, bool replacing)
 {
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
     float gain = *parameters.getRawParameterValue("feedback");
 
-	if (writePosition + numSamples >= delaySamples)
-	{
+	//check if you are at the end of buffer and have to wrap around and write from beginning
+	if (writePosition + numSamples >= delaySamples) {
 		int difference = delaySamples - writePosition;
 		int leftOverSamples = numSamples - difference;
+		auto midGain = jmap(float(difference) / numSamples, startGain, endGain);
 
-		//check if you are at the end of buffer and have to wrap around and write from beginning
-        delayBuffer.copyFromWithRamp(channel, writePosition, buffer.getReadPointer(channel), difference, gain, gain);
-        delayBuffer.copyFromWithRamp(channel, 0, buffer.getReadPointer(channel), leftOverSamples, gain, gain);
+		if (replacing) {
+			delayBuffer.copyFromWithRamp(channel, writePosition, buffer.getReadPointer(channel), difference, lastGain, midGain);
+			delayBuffer.copyFromWithRamp(channel, 0, buffer.getReadPointer(channel), leftOverSamples, midGain, endGain);
+		}
+		else {
+			delayBuffer.addFromWithRamp(channel, writePosition, buffer.getReadPointer(channel), difference, lastGain, midGain);
+			delayBuffer.addFromWithRamp(channel, 0, buffer.getReadPointer(channel), leftOverSamples, midGain, endGain);
+		}
 	}
+
 	else {
-        delayBuffer.copyFromWithRamp(channel, writePosition, buffer.getReadPointer(channel), numSamples, gain, gain);
+		if (replacing)
+			delayBuffer.copyFromWithRamp(channel, writePosition, buffer.getReadPointer(channel), numSamples, startGain, endGain);
+		else
+			delayBuffer.addFromWithRamp(channel, writePosition, buffer.getReadPointer(channel), numSamples, startGain, endGain);
 	}
 }
 
-void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, int channel)
+
+void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, int channel, int readPos, float startGain, float endGain, bool replacing)
 {
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
@@ -310,31 +312,42 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 	//wrap around from end of last buffer to start of next one
 	//delayTime is ms and fs is in seconds -> math to compensate
 	//mod by delaybuffer length to wrap around when near the end of buffer
-	int readPosition = static_cast<int>(delaySamples + writePosition - (lastSampleRate * lastDelayTime/1000) ) % delaySamples;
+	//int readPosition = static_cast<int>(delaySamples + writePosition - (lastSampleRate * lastDelayTime/1000) ) % delaySamples;
 	
 
-	if (lastDelayTime != currentDelayTime) { //if you turn the knob
+/*	if (lastDelayTime != currentDelayTime) { //if you turn the knob
 		if (smoothedValue.getTargetValue() != currentDelayTime) { //if you keep turning the knob
 			smoothedValue.setTargetValue(currentDelayTime); //update the target value
 			lastDelayTime = smoothedValue.getNextValue(); //do the smoothing
 			DBG(lastDelayTime);
 		}
 	}
-//    smoothedValue.setTargetValue(currentDelayTime); //update the target value
-//    lastDelayTime = smoothedValue.getNextValue(); //do the smoothing
+*/
 
-	if (readPosition + numSamples >= delaySamples) {	//if you exceed length of delay buffer
-		int difference = delaySamples - readPosition;	//number of samples left until the end of delaybuffer
+	if (readPos + numSamples >= delaySamples) {	//if you exceed length of delay buffer
+		int difference = delaySamples - readPos;	//number of samples left until the end of delaybuffer
 		int leftOverSamples = numSamples - difference;	//number of samples that get cut off and have to be put at the beginning
+		auto midGain = jmap(float(difference) / numSamples, startGain, endGain);
 
-		buffer.copyFrom(channel, 0, delayBuffer, channel, readPosition, difference); //from readPosition to end of buffer
-		buffer.copyFrom(channel, difference, delayBuffer, channel, 0, leftOverSamples); //from 0 to left over amount
+		//buffer.copyFrom(channel, 0, delayBuffer, channel, readPos, difference); //from readPosition to end of buffer
+		//buffer.copyFrom(channel, difference, delayBuffer, channel, 0, leftOverSamples); //from 0 to left over amount
+	
+		if (replacing) {
+			buffer.copyFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel), difference, startGain, midGain);
+			buffer.copyFromWithRamp(channel, difference, delayBuffer.getReadPointer(channel), leftOverSamples, midGain, endGain);
+		}
+		else {
+			buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel), difference, startGain, midGain);
+			buffer.addFromWithRamp(channel, difference, delayBuffer.getReadPointer(channel), leftOverSamples, midGain, endGain);
+		}
 	}
+
 	else { //if you do NOT have to wrap around to the beginning, read from delay buffer normally
-		buffer.copyFrom(channel, 0, delayBuffer, channel, readPosition, numSamples);
+		//buffer.copyFrom(channel, 0, delayBuffer, channel, readPos, numSamples);
 	}
 
 }
+
 
 void DelayPluginAudioProcessor::feedback(AudioBuffer<float>& buffer, int channel, float* drySignalBuffer) {
 	int numSamples = buffer.getNumSamples();
@@ -404,6 +417,10 @@ AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createL
 	};
 	//this parameter is for a 3-way toggle switch that allows the user to choose from manual delay time (the knob), lfo modulated delay time, or input signal amplitude modulated delay time
 	layout.add(std::make_unique<AudioParameterInt>("delayMode", "Delay Mode", 1, 3, 0, String(), intToString));
+
+	//new gain parameter
+	layout.add(std::make_unique<AudioParameterFloat>("gain", "Gain", NormalisableRange<float>(0.0, 1.0), 0.7));
+
 
 	return layout;
 }

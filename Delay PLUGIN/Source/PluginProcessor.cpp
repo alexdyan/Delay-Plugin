@@ -229,14 +229,6 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 		//DBG(currentDelayTime);
 	}
 
-	else {}
-
-
-	for (int i = 0; i < delayBuffer.getNumChannels(); i++) {
-		//float* drySignalBuffer = buffer.getWritePointer(i); //buffer to add the main signal to for feedback
-		fillDelayBuffer(buffer, i, writePosition, 1.0f, 1.0f, true);
-	}
-
 	//input volume
 	buffer.applyGainRamp(0, buffer.getNumSamples(), lastGain, currentGain);
 	lastGain = currentGain;

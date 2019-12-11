@@ -20,36 +20,24 @@ public:
     Delay(DelayPluginAudioProcessor& );
     
     void prepareToPlay (double sampleRate);
-    
     void processBlock(AudioBuffer<float> &buffer);
     
-    void writeToDelayBuffer (AudioBuffer<float>& buffer,
-                             const int channelIn, const int channelOut,
-                             const int writePos,
-                             float startGain, float endGain,
-                             bool replacing);
+    void writeToDelayBuffer (AudioBuffer<float>& buffer, const int channelIn, const int channelOut, const int writePos, float startGain, float endGain, bool replacing);
+    void readFromDelayBuffer (AudioBuffer<float>& buffer, const int channelIn, const int channelOut, const int readPos, float startGain, float endGain, bool replacing);
 
-    void readFromDelayBuffer (AudioBuffer<float>& buffer,
-                              const int channelIn, const int channelOut,
-                              const int readPos,
-                              float startGain, float endGain,
-                              bool replacing);
-
-    
-    int getLengthInSamples() { return mDelayBuffer.getNumSamples(); }
+    int getLengthInSamples() { return delayBuffer.getNumSamples(); }
     
     DelayPluginAudioProcessor &processor;
     
-    // Variables
 private:
-    AudioBuffer<float> mDelayBuffer;
+    AudioBuffer<float> delayBuffer;
 
-    float mLastInputGain    = 0.0f;
-    float mLastFeedbackGain = 0.0f;
+    float lastInputGain = 0.0;
+    float lastFeedbackGain = 0.0;
 
-    int    mWritePos        = 0;
-    int    mExpectedReadPos = -1;
-    double mSampleRate      = 0;
+    int    writePosition = 0;
+    int    nextReadPosition = -1;
+    double lastSampleRate = 0;
 
 
 };

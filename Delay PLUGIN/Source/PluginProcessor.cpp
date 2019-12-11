@@ -31,8 +31,8 @@ DelayPluginAudioProcessor::DelayPluginAudioProcessor() : parameters(*this, nullp
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       ), lfo(*this), // "this" is the reference to the processor bc WE ARE IN the processor rn
-                            delay(*this)
+                       ), lfo(*this), //"this" is the reference to the processor bc WE ARE IN the processor rn
+                            delay(*this) //same
 #endif
 {
     
@@ -182,13 +182,6 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
     // guaranteed to be empty - they may contain garbage).
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
     
 
 	int numSamples = buffer.getNumSamples();
@@ -272,7 +265,7 @@ void DelayPluginAudioProcessor::setStateInformation (const void* data, int sizeI
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-
+/*
 void DelayPluginAudioProcessor::fillDelayBuffer(AudioBuffer<float> &buffer, int channel, int writePos, float startGain, float endGain, bool replacing)
 {
 	int numSamples = buffer.getNumSamples();
@@ -302,8 +295,9 @@ void DelayPluginAudioProcessor::fillDelayBuffer(AudioBuffer<float> &buffer, int 
 			delayBuffer.addFromWithRamp(channel, writePosition, buffer.getReadPointer(channel), numSamples, startGain, endGain);
 	}
 }
+*/
 
-
+/*
 void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, int channel, int readPos, float startGain, float endGain, bool replacing)
 {
 	int numSamples = buffer.getNumSamples();
@@ -313,16 +307,7 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 	//delayTime is ms and fs is in seconds -> math to compensate
 	//mod by delaybuffer length to wrap around when near the end of buffer
 	//int readPosition = static_cast<int>(delaySamples + writePosition - (lastSampleRate * lastDelayTime/1000) ) % delaySamples;
-	
 
-/*	if (lastDelayTime != currentDelayTime) { //if you turn the knob
-		if (smoothedValue.getTargetValue() != currentDelayTime) { //if you keep turning the knob
-			smoothedValue.setTargetValue(currentDelayTime); //update the target value
-			lastDelayTime = smoothedValue.getNextValue(); //do the smoothing
-			DBG(lastDelayTime);
-		}
-	}
-*/
 
 	if (readPos + numSamples >= delaySamples) {	//if you exceed length of delay buffer
 		int difference = delaySamples - readPos;	//number of samples left until the end of delaybuffer
@@ -347,8 +332,9 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 	}
 
 }
+*/
 
-
+/*
 void DelayPluginAudioProcessor::feedback(AudioBuffer<float>& buffer, int channel, float* drySignalBuffer) {
 	int numSamples = buffer.getNumSamples();
 	int delaySamples = delayBuffer.getNumSamples();
@@ -367,6 +353,7 @@ void DelayPluginAudioProcessor::feedback(AudioBuffer<float>& buffer, int channel
 		delayBuffer.addFromWithRamp(channel, writePosition, drySignalBuffer, numSamples, 0.7, 0.7);
 	}
 }
+*/
 
 
 //look up the tutorial for Audio Tree State
@@ -391,8 +378,17 @@ AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createL
 	};
 	layout.add(std::make_unique<AudioParameterFloat>("lfoFrequency", "LFO Frequency", NormalisableRange<float>(0.1, 4.0), 0.1, String(), AudioProcessorParameter::genericParameter, floatToStringLFO));
 	
-	layout.add(std::make_unique<AudioParameterFloat>("amplitudeThresh", "Amplitude Threshold", NormalisableRange<float>(0.05, 1.0), 0.5));
+
+	auto floatToStringAmplitude = [&](float value, int maxLength) {
+		float valuedB = 20 * log10(value);
+		int temp = valuedB * 100;
+		valuedB = float(temp) / 100.0;
+		String units = "dB";
+		return String(valuedB) + units;
+	};
+	layout.add(std::make_unique<AudioParameterFloat>("amplitudeThresh", "Amplitude Threshold", NormalisableRange<float>(0.05, 1.0), 0.5, String(), AudioProcessorParameter::genericParameter, floatToStringAmplitude));
 	
+
 	auto floatToStringFeedback = [&](float value, int maxLength) {
 		int temp = value * 100;
 		value = float(temp) / 100.0;
@@ -400,7 +396,7 @@ AudioProcessorValueTreeState::ParameterLayout DelayPluginAudioProcessor::createL
 		String units = "%";
 		return String(value) + units;
 	};
-	layout.add(std::make_unique<AudioParameterFloat>("feedback", "Feedback", NormalisableRange<float>(0.0, 1.0), 0.0, String(), AudioProcessorParameter::genericParameter, floatToStringFeedback));
+	layout.add(std::make_unique<AudioParameterFloat>("feedback", "Feedback", NormalisableRange<float>(0.0, 1.0), 0.2, String(), AudioProcessorParameter::genericParameter, floatToStringFeedback));
 
 
 	auto intToString = [&] (int value, int maxLength) {

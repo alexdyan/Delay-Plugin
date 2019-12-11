@@ -58,39 +58,40 @@ void DelayDisplay::paint (Graphics& g)
 		float xDist = getWidth() / 5.f;
 		float y = getHeight() / 2.f;
 		float yDist = getHeight() * 0.4;
-		upDown *= -1;
+		upDown *= -1; //flip the direction
 
 		float endPointX = xDist * i;
 		float endPointY = y;
-		float controlPointX = endPointX - xDist / 2.0;
-		float controlPointY = yDist + upDown * yDist;
-		p.quadraticTo(controlPointX, controlPointY, endPointX, endPointY);
+		float controlPointX = endPointX - xDist / 2.0;	//the peaks/valleys of the sin wave
+		float controlPointY = yDist + upDown * yDist;	//use the flipping variable to draw the sin wave periods
+		p.quadraticTo(controlPointX, controlPointY, endPointX, endPointY); //draw the path
 	}
+
 	g.setColour(findColour(ColourIds::mainWaveColourId));
 	g.strokePath(p, PathStrokeType(2.5f)); //path thickness
 
+	//translate the path to draw the DELAYED waveform
 	p.applyTransform(AffineTransform::translation(map2(lastDelayTime, 0.0, 2000.0, 0.0, getWidth()*0.3), 0));	
 	g.setColour(findColour(ColourIds::delayedWaveColourId));
-	g.strokePath(p, PathStrokeType(2.5f)); //path thickness
+	g.strokePath(p, PathStrokeType(2.5f));
 
 }
 
+//set the gui delayTime variable to the actual slider delayTime value
 void DelayDisplay::updateDelayTime() {
-	//gui world delayTime variable
 	lastDelayTime = *processor.parameters.getRawParameterValue("delayTime");
 	repaint();
 }
 
 
 //this part is so we can access delayTime from the gui world, but don't know how/why it works
-//see updateDelayTime in DelayDisplay.cpp
 void DelayDisplay::parameterChanged(const String& parameterId, float newParameterValue) {
 
 	if (parameterId.equalsIgnoreCase("delayTime")) {
-		auto updateDisplay = [&] { //lambda -> function that's also a variable or something
-			updateDelayTime(); //set the gui delayTime to the actual slider delayTime value
+		auto updateDisplay = [&] {	//lambda (a function that's also a variable or something)
+			updateDelayTime();
 		};
-		MessageManager::callAsync(updateDisplay); //don't know
+		MessageManager::callAsync(updateDisplay); //have to call asynchronously to avoid issues in the Audio Thread
 	}
 
 	else if (parameterId.equalsIgnoreCase("delayMode")) {
@@ -104,7 +105,7 @@ void DelayDisplay::parameterChanged(const String& parameterId, float newParamete
 }
 
 void DelayDisplay::timerCallback() {
-
+	//this is how you update the position at which to paint the delayed waveform
 	if (lastDelayTime != *currentDelayTime) {
 		lastDelayTime = *currentDelayTime;
 		repaint();

@@ -18,98 +18,93 @@ Delay::Delay(DelayPluginAudioProcessor &p) : processor(p)
 
 void Delay::prepareToPlay (double sampleRate)
 {
-    mSampleRate = sampleRate;
-    mDelayBuffer.setSize(2, sampleRate * 5);
-    mDelayBuffer.clear();
+    lastSampleRate = sampleRate;
+    delayBuffer.setSize(2, sampleRate * 5);
+    delayBuffer.clear();
     
 }
 
 void Delay::processBlock(AudioBuffer<float>& buffer)
 {
-    const float gain = .8;
-    const float time = processor.currentDelayTime;
-    DBG(time);
-    const float feedback = *processor.parameters.getRawParameterValue("feedback");
+    float gain = 0.8;
+    float time = processor.currentDelayTime;
+    //DBG(time);
+    float feedback = *processor.parameters.getRawParameterValue("feedback");
     
-    // write original to delay
-    for (int i = 0; i < 2; ++i)
-    {
-        writeToDelayBuffer (buffer, i, i, mWritePos, 1.0f, 1.0f, true);
+	//write dry signal to delay buffer
+    for (int i = 0; i < 2; ++i) {
+        writeToDelayBuffer(buffer, i, i, writePosition, 1.0f, 1.0f, true);
     }
     
-    // adapt dry gain
-    buffer.applyGainRamp (0, buffer.getNumSamples(), mLastInputGain, gain);
-    mLastInputGain = gain;
+	//overall gain
+    buffer.applyGainRamp(0, buffer.getNumSamples(), lastInputGain, gain);
+    lastInputGain = gain;
     
-    // read delayed signal
-    auto readPos = roundToInt (mWritePos - (mSampleRate * time / 1000.0));
-    if (readPos < 0)
-        readPos += mDelayBuffer.getNumSamples();
+    //read delayed signal
+    auto readPos = roundToInt(writePosition - (lastSampleRate * time / 1000.0));
+	if (readPos < 0) {
+		readPos += delayBuffer.getNumSamples();
+	}
     
-    // if has run before
-    if (mExpectedReadPos >= 0)
-    {
-        // fade out if readPos is off
-        auto endGain = (readPos == mExpectedReadPos) ? 1.0f : 0.0f;
-        for (int i=0; i<buffer.getNumChannels(); ++i)
-        {
-            readFromDelayBuffer (buffer, i, i, mExpectedReadPos, 1.0, endGain, false);
+    //if it's already run at least once
+    if (nextReadPosition >= 0) {
+        //fade out
+        auto endGain = (readPos == nextReadPosition) ? 1.0f : 0.0f;
+        for (int i=0; i<buffer.getNumChannels(); ++i) {
+            readFromDelayBuffer (buffer, i, i, nextReadPosition, 1.0, endGain, false);
         }
     }
     
-    // fade in at new position
-    if (readPos != mExpectedReadPos)
-    {
-        for (int i=0; i<buffer.getNumChannels(); ++i)
-        {
+	//fade in
+    if (readPos != nextReadPosition) {
+        for (int i=0; i<buffer.getNumChannels(); ++i) {
             readFromDelayBuffer (buffer, i, i, readPos, 0.0, 1.0, false);
         }
     }
     
-    // add feedback to delay
-    for (int i=0; i<buffer.getNumChannels(); ++i)
-    {
-        writeToDelayBuffer (buffer, i, i, mWritePos, mLastFeedbackGain, feedback, false);
+	//apply feedback to delayed signal
+    for (int i=0; i<buffer.getNumChannels(); ++i) {
+        writeToDelayBuffer (buffer, i, i, writePosition, lastFeedbackGain, feedback, false);
     }
-    mLastFeedbackGain = feedback;
+    lastFeedbackGain = feedback;
     
-    // advance positions
-    mWritePos += buffer.getNumSamples();
-    if (mWritePos >= mDelayBuffer.getNumSamples())
-        mWritePos -= mDelayBuffer.getNumSamples();
+	//update write position
+    writePosition += buffer.getNumSamples();
+	if (writePosition >= delayBuffer.getNumSamples()) {
+		writePosition -= delayBuffer.getNumSamples();
+	}
     
-    mExpectedReadPos = readPos + buffer.getNumSamples();
-    if (mExpectedReadPos >= mDelayBuffer.getNumSamples())
-        mExpectedReadPos -= mDelayBuffer.getNumSamples();
+	nextReadPosition = readPos + buffer.getNumSamples();
+	if (nextReadPosition >= delayBuffer.getNumSamples()) {
+		nextReadPosition -= delayBuffer.getNumSamples();
+	}
 
 }
 
-void Delay::writeToDelayBuffer (AudioBuffer<float> &buffer,
-                                const int channelIn, const int channelOut,
-                                const int writePos,
-                                float startGain, float endGain,
-                                bool replacing)
+void Delay::writeToDelayBuffer (AudioBuffer<float> &buffer, const int channelIn, const int channelOut, const int writePos, float startGain, float endGain, bool replacing)
 {
-        if (writePos + buffer.getNumSamples() <= mDelayBuffer.getNumSamples())
-    {
+	int numSamples = buffer.getNumSamples();
+	int delaySamples = delayBuffer.getNumSamples();
+
+	if (writePos + numSamples <= delaySamples) {
         if (replacing)
-            mDelayBuffer.copyFromWithRamp (channelOut, writePos, buffer.getReadPointer (channelIn), buffer.getNumSamples(), startGain, endGain);
+            delayBuffer.copyFromWithRamp (channelOut, writePos, buffer.getReadPointer (channelIn), numSamples, startGain, endGain);
         else
-            mDelayBuffer.addFromWithRamp (channelOut, writePos, buffer.getReadPointer (channelIn), buffer.getNumSamples(), startGain, endGain);
+            delayBuffer.addFromWithRamp (channelOut, writePos, buffer.getReadPointer (channelIn), numSamples, startGain, endGain);
     }
-    else
-    {
-        const auto midPos  = mDelayBuffer.getNumSamples() - writePos;
-        const auto midGain = jmap (float (midPos) / buffer.getNumSamples(), startGain, endGain);
-        if (replacing)
-        {
-            mDelayBuffer.copyFromWithRamp (channelOut, writePos, buffer.getReadPointer (channelIn),         midPos, mLastInputGain, midGain);
-            mDelayBuffer.copyFromWithRamp (channelOut, 0,        buffer.getReadPointer (channelIn, midPos), buffer.getNumSamples() - midPos, midGain, endGain);
+
+    else { //if you exceed length of delay buffer
+        auto midPos  = delaySamples - writePos; //number of samples left until the end of delaybuffer
+		auto leftOverSamples = numSamples - midPos;	//number of samples that get cut off and have to be put at the beginning
+        auto midGain = jmap (float (midPos) / numSamples, startGain, endGain);
+
+        if (replacing) {
+            delayBuffer.copyFromWithRamp (channelOut, writePos, buffer.getReadPointer (channelIn), midPos, lastInputGain, midGain);
+            delayBuffer.copyFromWithRamp (channelOut, 0, buffer.getReadPointer (channelIn, midPos), leftOverSamples, midGain, endGain);
         }
-        else
-        {
-            mDelayBuffer.addFromWithRamp (channelOut, writePos, buffer.getReadPointer (channelIn),         midPos, mLastInputGain, midGain);
-            mDelayBuffer.addFromWithRamp (channelOut, 0,        buffer.getReadPointer (channelIn, midPos), buffer.getNumSamples() - midPos, midGain, endGain);
+        else {
+            delayBuffer.addFromWithRamp (channelOut, writePos, buffer.getReadPointer (channelIn), midPos, lastInputGain, midGain);
+            delayBuffer.addFromWithRamp (channelOut, 0, buffer.getReadPointer (channelIn, midPos), leftOverSamples, midGain, endGain);
         }
     }
 
@@ -117,26 +112,32 @@ void Delay::writeToDelayBuffer (AudioBuffer<float> &buffer,
 
 void Delay::readFromDelayBuffer (AudioBuffer<float>& buffer, const int channelIn, const int channelOut, const int readPos, float startGain, float endGain, bool replacing)
 {
-    if (readPos + buffer.getNumSamples() <= mDelayBuffer.getNumSamples())
-    {
+	int numSamples = buffer.getNumSamples();
+	int delaySamples = delayBuffer.getNumSamples();
+
+	//wrap around from end of last buffer to start of next one
+	//delayTime is ms and fs is in seconds -> math to compensate
+	//mod by delaybuffer length to wrap around when near the end of buffer
+
+    if (readPos + numSamples <= delaySamples) {
         if (replacing)
-            buffer.copyFromWithRamp (channelOut, 0, mDelayBuffer.getReadPointer (channelIn, readPos), buffer.getNumSamples(), startGain, endGain);
+            buffer.copyFromWithRamp (channelOut, 0, delayBuffer.getReadPointer (channelIn, readPos), numSamples, startGain, endGain);
         else
-            buffer.addFromWithRamp (channelOut, 0, mDelayBuffer.getReadPointer (channelIn, readPos), buffer.getNumSamples(), startGain, endGain);
+            buffer.addFromWithRamp (channelOut, 0, delayBuffer.getReadPointer (channelIn, readPos), numSamples, startGain, endGain);
     }
-    else
-    {
-        const auto midPos  = mDelayBuffer.getNumSamples() - readPos;
-        const auto midGain = jmap (float (midPos) / buffer.getNumSamples(), startGain, endGain);
-        if (replacing)
-        {
-            buffer.copyFromWithRamp (channelOut, 0,      mDelayBuffer.getReadPointer (channelIn, readPos), midPos, startGain, midGain);
-            buffer.copyFromWithRamp (channelOut, midPos, mDelayBuffer.getReadPointer (channelIn), buffer.getNumSamples() - midPos, midGain, endGain);
+
+    else { //if you exceed length of delay buffer
+        auto midPos  = delaySamples - readPos; //number of samples left until the end of delaybuffer
+		auto leftOverSamples = numSamples - midPos;	//number of samples that get cut off and have to be put at the beginning
+        auto midGain = jmap (float (midPos) / numSamples, startGain, endGain);
+
+        if (replacing) {
+            buffer.copyFromWithRamp (channelOut, 0, delayBuffer.getReadPointer (channelIn, readPos), midPos, startGain, midGain);
+            buffer.copyFromWithRamp (channelOut, midPos, delayBuffer.getReadPointer (channelIn), leftOverSamples, midGain, endGain);
         }
-        else
-        {
-            buffer.addFromWithRamp (channelOut, 0,      mDelayBuffer.getReadPointer (channelIn, readPos), midPos, startGain, midGain);
-            buffer.addFromWithRamp (channelOut, midPos, mDelayBuffer.getReadPointer (channelIn), buffer.getNumSamples() - midPos, midGain, endGain);
+        else {
+            buffer.addFromWithRamp (channelOut, 0, delayBuffer.getReadPointer (channelIn, readPos), midPos, startGain, midGain);
+            buffer.addFromWithRamp (channelOut, midPos, delayBuffer.getReadPointer (channelIn), leftOverSamples, midGain, endGain);
         }
     }
 }

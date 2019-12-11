@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="byL9Qz" name="Dlay" projectType="audioplug" jucerVersion="5.4.5"
+<JUCERPROJECT id="byL9Qz" name="Dlay" projectType="audioplug" jucerVersion="5.4.3"
               pluginManufacturer="Alex D'Yan" pluginManufacturerCode="Dyan"
               pluginCode="Dlay">
   <MAINGROUP id="ekgmKz" name="Dlay">

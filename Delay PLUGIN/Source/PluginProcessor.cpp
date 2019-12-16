@@ -120,10 +120,10 @@ void DelayPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 	lastDelayTime = *parameters.getRawParameterValue("delayTime");
 	smoothedValue = SmoothedValue<float, ValueSmoothingTypes::Linear>(lastDelayTime); //initial value of current delayTime
     
-    // initialize delay object
+    //initialize delay object
     delay.prepareToPlay(sampleRate);
     
-    // initialize lfo object
+    //initialize lfo object
 	lfo.prepareToPlay(sampleRate);
 }
 
@@ -198,11 +198,11 @@ void DelayPluginAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 
 	//lfo modulated = create and write to LFO buffer, get RMS level (current amplitude), and scale that and set it as currentDelayTime
 	else if (currentDelayMode == DelayMode::lfoMode) {
-		AudioBuffer<float> lfoBuffer; //make a buffer to store your lfo signal values
-		lfoBuffer.setSize(1, buffer.getNumSamples()); //make the size that of the output buffer
-		lfo.processBlock(lfoBuffer); //write to the lfo buffer (NOT the output buffer)
+		AudioBuffer<float> lfoBuffer;					//make a buffer to store your lfo signal values
+		lfoBuffer.setSize(1, buffer.getNumSamples());	//make the size that of the output buffer
+		lfo.processBlock(lfoBuffer);					//write to the lfo buffer (NOT the output buffer)
 		float currentLFOAmplitude = 0;
-		currentLFOAmplitude = lfoBuffer.getRMSLevel(0, 0, buffer.getNumSamples()); //get the rms (amplitude) of the lfo signal
+		currentLFOAmplitude = lfoBuffer.getRMSLevel(0, 0, buffer.getNumSamples()); //get the rms (average amplitude) of the lfo signal
 
 		currentDelayTime = ceil(map(currentLFOAmplitude, 0.0, 1.0, 0.0, *parameters.getRawParameterValue("delayTime")));
 	}
@@ -304,7 +304,7 @@ void DelayPluginAudioProcessor::readFromDelayBuffer(AudioBuffer<float>& buffer, 
 	int delaySamples = delayBuffer.getNumSamples();
 	
 	//wrap around from end of last buffer to start of next one
-	//delayTime is ms and fs is in seconds -> math to compensate
+	//delayTime is ms and fs is in seconds -> divide by 1000 to compensate
 	//mod by delaybuffer length to wrap around when near the end of buffer
 	//int readPosition = static_cast<int>(delaySamples + writePosition - (lastSampleRate * lastDelayTime/1000) ) % delaySamples;
 

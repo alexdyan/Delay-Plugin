@@ -33,7 +33,7 @@ private:
     DelayPluginAudioProcessor& processor;
 
 	std::unique_ptr<Slider> delayTimeSlider;
-	std::unique_ptr<SliderAttachment> delayTimeAttachment; //how you link the gui elements to the actual delay variables
+	std::unique_ptr<SliderAttachment> delayTimeAttachment; //how you link the gui elements to the actual variables
 	std::unique_ptr<Label> delayTimeLabel;
 
 	std::unique_ptr<Slider> lfoFreqSlider;
@@ -54,7 +54,7 @@ private:
 
 	std::unique_ptr<DelayDisplay> display;
     
-    TextButton button;
+    TextButton button; //don't think I need this
     
     Font font;
     

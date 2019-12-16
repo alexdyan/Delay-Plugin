@@ -28,7 +28,6 @@ void Delay::processBlock(AudioBuffer<float>& buffer)
 {
     float gain = 0.8;
     float time = processor.currentDelayTime;
-    //DBG(time);
     float feedback = *processor.parameters.getRawParameterValue("feedback");
     
 	//write dry signal to delay buffer
@@ -41,8 +40,8 @@ void Delay::processBlock(AudioBuffer<float>& buffer)
     lastInputGain = gain;
     
     //read delayed signal
-    auto readPos = roundToInt(writePosition - (lastSampleRate * time / 1000.0));
-	if (readPos < 0) {
+    auto readPos = roundToInt(writePosition - (lastSampleRate * time / 1000.0)); //time is currentDelayTime
+	if (readPos < 0) { //equivalent of mod %
 		readPos += delayBuffer.getNumSamples();
 	}
     

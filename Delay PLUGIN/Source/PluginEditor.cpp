@@ -177,7 +177,7 @@ void DelayPluginAudioProcessorEditor::parameterChanged(const String& parameterId
 
 	//you have to do this bc you can't do gui stuff on the audio thread bc it will yell at you and you're calling this asynchronously to avoid that
 	if (newParameterValue == 1) { //manual delay mode
-		auto updateLabel = [&] { //lambda function
+		auto updateLabel = [&] { //lambda function (function only used one time)
 			delayTimeLabel->setText("Delay Time", NotificationType::dontSendNotification);
 		};
 

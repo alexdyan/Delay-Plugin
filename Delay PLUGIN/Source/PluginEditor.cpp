@@ -92,6 +92,8 @@ DelayPluginAudioProcessorEditor::DelayPluginAudioProcessorEditor (DelayPluginAud
 
 DelayPluginAudioProcessorEditor::~DelayPluginAudioProcessorEditor()
 {
+	//do this so that when you close and reopen the plugin window, the editor doesn't try to access the old listeners that don't exist anymore (crash)
+	processor.parameters.removeParameterListener("delayMode", this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +108,7 @@ void DelayPluginAudioProcessorEditor::paint (Graphics& g)
 }
 
 void DelayPluginAudioProcessorEditor::paintOverChildren(Graphics &g) {
-    g.setColour(Colours::darkgrey.darker(0.808925));
+    g.setColour(Colours::darkgrey);
     g.setFont(font);
     float height = getWidth() * 0.129571;
     font.setHeight(height * .75);

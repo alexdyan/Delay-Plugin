@@ -31,7 +31,7 @@ void Delay::processBlock(AudioBuffer<float>& buffer)
     float feedback = *processor.parameters.getRawParameterValue("feedback");
     
 	//write dry signal to delay buffer
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < buffer.getNumChannels(); ++i) {
         writeToDelayBuffer(buffer, i, i, writePosition, 1.0f, 1.0f, true);
     }
     

@@ -8,17 +8,6 @@
   ==============================================================================
 */
 
-
-/*
-- future possible additions: hover over some point in the signal and give user more info (such as amplitude in the osc at a point or effect info)
-- future possible: zoom into see more accurate delay time
-feedback: use bar graphs to represent gain of delayed signal OR hover text for each knob (not obligated to read)
-
-- references: isotope! ableton too much visual stimulation...? 
-- kind of foundational paper in interface design -> Interactive User Interface Design by IEEE to site!
-- Edward Tufte da
-*/
-
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
